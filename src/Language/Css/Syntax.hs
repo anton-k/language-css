@@ -58,8 +58,9 @@ data Ident = Ident String
 --------------------------------------------------------
 -- Stylesheet
 
-data StyleSheet = StyleSheet (Maybe AtCharSet) [AtImport] [StyleBody]
-                  deriving (Eq, Show)
+data StyleSheet = 
+    StyleSheet (Maybe AtCharSet) [AtImport] [AtNamespace] [StyleBody]
+    deriving (Eq, Show)
 
 data StyleBody = SRuleSet    RuleSet 
                | SAtMedia    AtMedia 
@@ -94,6 +95,11 @@ type PseudoPage = Ident
 -- | \@font-face
 data AtFontFace = AtFontFace [Decl]
                   deriving (Eq, Show)
+
+
+-- | \@namespace
+data AtNamespace = AtNamespace (Maybe NamespacePrefix) ImportHead 
+
 
 ---------------------------------------------------------
 -- Rules
@@ -201,8 +207,19 @@ data Grad = Grad Double
         deriving (Eq, Show)
 
 -- | \<color\>
-data Color = Cword String | 
-             Crgb Int Int Int
+data Color = Cword String 
+
+           | Crgb Int Int Int
+           | CrgbPt Pt Pt Pt           
+           | Crgba Int Int Int Double
+           | CrgbaPt Pt Pt Pt Double
+           
+           | Chsl Int Int Int
+           | ChslPt Pt Pt Pt
+           | Chsla Int Int Int Double
+           | ChslaPt Pt Pt Pt Double
+
+
         deriving (Eq, Show)
 
 -- | \<frequency\>
