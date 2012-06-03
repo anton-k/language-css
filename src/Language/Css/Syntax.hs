@@ -11,6 +11,7 @@ module Language.Css.Syntax (
         -- * AtRule
         AtCharSet(..), 
         AtImport(..), ImportHead(..),
+        AtNamespace(..), NamespacePrefix,
         AtMedia(..), 
         AtPage(..), PseudoPage,
         AtFontFace(..),
@@ -99,7 +100,10 @@ data AtFontFace = AtFontFace [Decl]
 
 -- | \@namespace
 data AtNamespace = AtNamespace (Maybe NamespacePrefix) ImportHead 
+                  deriving (Eq, Show)
 
+
+type NamespacePrefix = Ident
 
 ---------------------------------------------------------
 -- Rules
@@ -191,8 +195,9 @@ data Value = VDeg Deg |
              VUri Uri
         deriving (Eq, Show)
 
-data Func = Func Ident Expr
-                  deriving (Eq, Show)
+-- | Function is identifier and the list of arguments
+data Func = Func Ident [Expr]
+    deriving (Eq, Show)
 
 -- | \<angle\>
 data Deg = Deg Double

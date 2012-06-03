@@ -25,9 +25,10 @@ vsep = vcat . punctuate (text "\n")
 -- StyleSheet
 
 instance Pretty StyleSheet where
-    pretty (StyleSheet ch imp body) = 
+    pretty (StyleSheet ch imp nmsp body) = 
                ppMaybe ch 
             $$ (vsep $ map pretty imp)
+            $$ (vsep $ map pretty nmsp)
             $$ (vsep $ map pretty body)
 
 instance Pretty StyleBody where
@@ -53,6 +54,13 @@ instance Pretty ImportHead where
     pretty x = case x of
                 IStr x -> text x
                 IUri x -> pretty x
+
+-- @namespace
+instance Pretty AtNamespace where
+    pretty (AtNamespace namespaceImp impHead) = 
+        text "@namespace" <+> ppMaybe namespaceImp <+> pretty impHead
+
+
 -- @page
 instance Pretty AtPage where
     pretty (AtPage id pp ds) = text "@page" 
@@ -169,7 +177,8 @@ instance Pretty Expr where
                 SpaceSep x e -> pretty x <+> space <+> pretty e
 
 instance Pretty Func where
-    pretty (Func name arg) = pretty name <> parens (pretty arg)
+    pretty (Func name args) = pretty name 
+        <> parens (hsep $ punctuate comma $ fmap pretty args)
 
 
 instance Pretty Ident where
@@ -190,8 +199,19 @@ instance Pretty Grad where
 instance Pretty Color where
     pretty x = case x of 
         Cword a    -> text a 
-        Crgb r g b -> (text "rgb" <> ) $ parens $ hsep $ 
-                        punctuate comma $ map int [r, g, b]
+        Crgb r g b -> col "rgb" $ fmap VInt [r, g, b]
+        Crgba r g b a -> col "rgba" $ [VInt r, VInt g, VInt b, VDouble a]
+        CrgbPt r g b -> col "rgb" $ fmap VPt [r, g, b]
+        CrgbaPt r g b a -> col "rgba" $ [VPt r, VPt g, VPt b, VDouble a]
+        
+        Chsl r g b -> col "hsl" $ fmap VInt [r, g, b]
+        Chsla r g b a -> col "hsla" $ [VInt r, VInt g, VInt b, VDouble a]
+        ChslPt r g b -> col "hsl" $ fmap VPt [r, g, b]
+        ChslaPt r g b a -> col "hsla" $ [VPt r, VPt g, VPt b, VDouble a]
+        where col :: String -> [Value] -> Doc
+              col name vals = (text name <> ) $  parens $ hsep $
+                        punctuate comma $ map pretty vals
+
 
 instance Pretty Hz where
     pretty (Hz x) = double x <> text "Hz"

@@ -34,7 +34,7 @@ module Language.Css.Build (
 
        -- * StyleSheet
        styleSheet, rules, ruleSets, 
-       addImports, addRules, charset,
+       addImports, addNamespaces, addRules, charset,
 
        -- * AtRules
        media, page, fontFace,
@@ -53,8 +53,9 @@ module Language.Css.Build (
 
        -- * Primitive values
        fun, str, int, num,
-       deg, rad, grad, cword, rgb, hz, khz,
-       em, ex, px, in', cm, mm, pc, pt,
+       deg, rad, grad, 
+       cword, rgb, rgba, hsl, hsla, rgbPt, rgbaPt, hslPt, hslaPt,
+       hz, khz, em, ex, px, in', cm, mm, pc, pt,
        pct, ms, s, url,
 
        -- * Colors
@@ -86,28 +87,33 @@ instance ToExpr Expr where
 -----------------------------------------------------------------
 -- StyleSheet
 
-styleSheet :: Maybe AtCharSet -> [AtImport] -> [StyleBody] -> StyleSheet
+styleSheet :: Maybe AtCharSet -> [AtImport] -> [AtNamespace] 
+    -> [StyleBody] -> StyleSheet
 styleSheet = StyleSheet
 
 -- | construct 'StyleSheet' from list of 'AtRule' 's or 'RuleSet' 's
 rules :: [StyleBody] -> StyleSheet
-rules = styleSheet Nothing []
+rules = styleSheet Nothing [] []
 
 -- | append imports
 addImports :: [AtImport] -> StyleSheet -> StyleSheet
-addImports is' (StyleSheet c is body) = StyleSheet c (is ++ is') body
+addImports is' (StyleSheet c is ns body) = StyleSheet c (is ++ is') ns body
+
+addNamespaces :: [AtNamespace] -> StyleSheet -> StyleSheet
+addNamespaces ns' (StyleSheet c is ns body) = StyleSheet c is (ns ++ ns') body
 
 -- | append rules
 addRules :: [StyleBody] -> StyleSheet -> StyleSheet
-addRules rs (StyleSheet c is body) = StyleSheet c is $ rs ++ body
+addRules rs (StyleSheet c is ns body) = StyleSheet c is ns $ rs ++ body
 
 -- | construct 'StyleSheet' from list of 'RuleSet' 's
 ruleSets :: [RuleSet] -> StyleSheet
-ruleSets = StyleSheet Nothing [] . map SRuleSet
+ruleSets = StyleSheet Nothing [] [] . map SRuleSet
 
 -- | set \@charset
 charset :: String -> StyleSheet -> StyleSheet
-charset str (StyleSheet _ is body) = StyleSheet (Just $ AtCharSet str) is body
+charset str (StyleSheet _ is ns body) = 
+    StyleSheet (Just $ AtCharSet str) is ns body
 
 -----------------------------------------------------------------
 -- AtRules
@@ -314,7 +320,7 @@ instance ToExpr Value where
 
 -- | 'Func' constructor
 fun :: ToExpr a => Ident -> a -> Func
-fun str = Func str . expr
+fun str = Func str . return . expr
 
 -- | \<angle\> 
 deg :: Double -> Expr
@@ -335,6 +341,35 @@ cword = expr . Cword . checkWord
 -- | \<color\> 
 rgb :: Int -> Int -> Int -> Expr
 rgb x0 x1 x2 = expr $ Crgb x0 x1 x2
+
+-- | \<color\> 
+rgbPt :: Pt -> Pt -> Pt -> Expr
+rgbPt x0 x1 x2 = expr $ CrgbPt x0 x1 x2
+
+-- | \<color\> 
+rgba :: Int -> Int -> Int -> Double -> Expr
+rgba x0 x1 x2 a = expr $ Crgba x0 x1 x2 a
+
+-- | \<color\> 
+rgbaPt :: Pt -> Pt -> Pt -> Double -> Expr
+rgbaPt x0 x1 x2 a = expr $ CrgbaPt x0 x1 x2 a
+
+-- | \<color\>
+hsl :: Int -> Int -> Int -> Expr
+hsl x0 x1 x2 = expr $ Chsl x0 x1 x2
+
+-- | \<color\> 
+hslPt :: Pt -> Pt -> Pt -> Expr
+hslPt x0 x1 x2 = expr $ ChslPt x0 x1 x2
+
+-- | \<color\>
+hsla :: Int -> Int -> Int -> Double -> Expr
+hsla x0 x1 x2 a = expr $ Chsla x0 x1 x2 a
+
+-- | \<color\> 
+hslaPt :: Pt -> Pt -> Pt -> Double -> Expr
+hslaPt x0 x1 x2 a = expr $ ChslaPt x0 x1 x2 a
+
 
 -- | \<frequency\> 
 hz :: Double -> Expr
