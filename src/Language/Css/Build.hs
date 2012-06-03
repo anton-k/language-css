@@ -37,7 +37,7 @@ module Language.Css.Build (
        addImports, addNamespaces, addRules, charset,
 
        -- * AtRules
-       media, page, fontFace,
+       media, page, fontFace, keyframes, at,
 
        -- * RuleSets
 
@@ -99,6 +99,7 @@ rules = styleSheet Nothing [] []
 addImports :: [AtImport] -> StyleSheet -> StyleSheet
 addImports is' (StyleSheet c is ns body) = StyleSheet c (is ++ is') ns body
 
+-- | append namespaces
 addNamespaces :: [AtNamespace] -> StyleSheet -> StyleSheet
 addNamespaces ns' (StyleSheet c is ns body) = StyleSheet c is (ns ++ ns') body
 
@@ -137,6 +138,14 @@ importUri str = AtImport (IUri $ Uri str)
 -- | \@font-face
 fontFace :: [Decl] -> StyleBody
 fontFace = SAtFontFace . AtFontFace
+
+-- | \@keyframes
+keyframes :: Ident -> [Frame] -> StyleBody 
+keyframes name frames = SAtKeyframes $ AtKeyframes name frames
+
+at :: Pt -> [Decl] -> Frame
+at = Frame . FrameAt
+
 
 -- RuleSets
 

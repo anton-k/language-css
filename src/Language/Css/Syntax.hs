@@ -15,6 +15,7 @@ module Language.Css.Syntax (
         AtMedia(..), 
         AtPage(..), PseudoPage,
         AtFontFace(..),
+        AtKeyframes(..), Frame(..), FrameTime(..),
         
         -- * RuleSet
         RuleSet(..), Decl(..), Prop, Prio(..), Expr(..),
@@ -63,10 +64,11 @@ data StyleSheet =
     StyleSheet (Maybe AtCharSet) [AtImport] [AtNamespace] [StyleBody]
     deriving (Eq, Show)
 
-data StyleBody = SRuleSet    RuleSet 
-               | SAtMedia    AtMedia 
-               | SAtPage     AtPage
-               | SAtFontFace AtFontFace
+data StyleBody = SRuleSet     RuleSet 
+               | SAtMedia     AtMedia 
+               | SAtPage      AtPage
+               | SAtFontFace  AtFontFace
+               | SAtKeyframes AtKeyframes
                   deriving (Eq, Show)
 
 ---------------------------------------------------------
@@ -83,6 +85,13 @@ data AtImport = AtImport ImportHead [Ident]
 data ImportHead = IStr String | IUri Uri
                   deriving (Eq, Show)
 
+-- | \@namespace
+data AtNamespace = AtNamespace (Maybe NamespacePrefix) ImportHead 
+                  deriving (Eq, Show)
+
+type NamespacePrefix = Ident
+
+
 -- | \@media
 data AtMedia = AtMedia [Ident] [RuleSet]
                   deriving (Eq, Show)
@@ -97,13 +106,17 @@ type PseudoPage = Ident
 data AtFontFace = AtFontFace [Decl]
                   deriving (Eq, Show)
 
+-- | \@keyframes 
+data AtKeyframes = AtKeyframes Ident [Frame]
+                  deriving (Eq, Show)  
 
--- | \@namespace
-data AtNamespace = AtNamespace (Maybe NamespacePrefix) ImportHead 
-                  deriving (Eq, Show)
+data Frame = Frame FrameTime [Decl]
+                  deriving (Eq, Show)  
 
+   
+data FrameTime = From | To | FrameAt Pt
+                  deriving (Eq, Show)  
 
-type NamespacePrefix = Ident
 
 ---------------------------------------------------------
 -- Rules

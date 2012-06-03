@@ -21,6 +21,11 @@ punctuatePretties sep = hcat . punctuate sep . map pretty
 
 vsep = vcat . punctuate (text "\n")
 
+curly :: Doc -> Doc
+curly a = lbrace $$ a <+> rbrace
+
+ppBody :: Pretty a => [a] -> Doc
+ppBody as = curly (nest 4 $ vcat $ punctuate semi $ map pretty as)
 
 -- StyleSheet
 
@@ -81,15 +86,27 @@ instance Pretty AtFontFace where
         <+> (braces $ punctuatePretties semi ds)
 
 
+-- @keyframes 
+instance Pretty AtKeyframes where
+    pretty (AtKeyframes name frames) 
+        =   text "@keyframes" <+> pretty name
+        <+> ppBody frames 
+
+instance Pretty Frame where 
+    pretty (Frame time body) = pretty time <+> ppBody body
+
+instance Pretty FrameTime where
+    pretty x = case x of
+        From        -> text "from"
+        To          -> text "to"
+        FrameAt a   -> pretty a
+
 -- RuleSets
 
 instance Pretty RuleSet where
 	pretty (RuleSet sels decls) = 
                 (vcat $ punctuate comma $ map pretty sels)
-                <+> lbrace  
-                $$ (nest 4 $ vcat $ punctuate semi $ map pretty decls)
-                <+> rbrace
-
+                <+> ppBody decls
 
 -- Declarations
 
