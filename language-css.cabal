@@ -4,8 +4,8 @@ Cabal-Version: >= 1.2
 License:       BSD3
 License-file:  LICENSE
 Author:	       Anton Kholomiov
-Synopsis:      CSS 2.1 syntax 
-Description:   library for building and pretty printing CSS 2.1 code
+Synopsis:      CSS 3.0 syntax 
+Description:   library for building and pretty printing CSS 3.0 code
 Stability:     Experimental
 Tested-With:   GHC==6.13.1
 Build-Type:    Simple
@@ -25,6 +25,11 @@ Library
         Language.Css.Build.Attributes
         Language.Css.Build.Pseudos
 
+
+Extra-Source-Files : 
+        gen/genAttributes.hs
+        gen/Attributes
+        examples/Simple.hs
 
 ---------------------------------------------------------------------------------- 		
   Other-Modules:

@@ -21,13 +21,19 @@ punctuatePretties sep = hcat . punctuate sep . map pretty
 
 vsep = vcat . punctuate (text "\n")
 
+curly :: Doc -> Doc
+curly a = lbrace $$ a <+> rbrace
+
+ppBody :: Pretty a => [a] -> Doc
+ppBody as = curly (nest 4 $ vcat $ punctuate semi $ map pretty as)
 
 -- StyleSheet
 
 instance Pretty StyleSheet where
-    pretty (StyleSheet ch imp body) = 
+    pretty (StyleSheet ch imp nmsp body) = 
                ppMaybe ch 
             $$ (vsep $ map pretty imp)
+            $$ (vsep $ map pretty nmsp)
             $$ (vsep $ map pretty body)
 
 instance Pretty StyleBody where
@@ -53,6 +59,13 @@ instance Pretty ImportHead where
     pretty x = case x of
                 IStr x -> text x
                 IUri x -> pretty x
+
+-- @namespace
+instance Pretty AtNamespace where
+    pretty (AtNamespace namespaceImp impHead) = 
+        text "@namespace" <+> ppMaybe namespaceImp <+> pretty impHead
+
+
 -- @page
 instance Pretty AtPage where
     pretty (AtPage id pp ds) = text "@page" 
@@ -73,15 +86,27 @@ instance Pretty AtFontFace where
         <+> (braces $ punctuatePretties semi ds)
 
 
+-- @keyframes 
+instance Pretty AtKeyframes where
+    pretty (AtKeyframes name frames) 
+        =   text "@keyframes" <+> pretty name
+        <+> ppBody frames 
+
+instance Pretty Frame where 
+    pretty (Frame time body) = pretty time <+> ppBody body
+
+instance Pretty FrameTime where
+    pretty x = case x of
+        From        -> text "from"
+        To          -> text "to"
+        FrameAt a   -> pretty a
+
 -- RuleSets
 
 instance Pretty RuleSet where
 	pretty (RuleSet sels decls) = 
                 (vcat $ punctuate comma $ map pretty sels)
-                <+> lbrace  
-                $$ (nest 4 $ vcat $ punctuate semi $ map pretty decls)
-                <+> rbrace
-
+                <+> ppBody decls
 
 -- Declarations
 
@@ -98,40 +123,64 @@ instance Pretty Prio where
 -- Selectors
 
 instance Pretty Sel where
-	pretty x = case x of
-		    SSel x -> pretty x
-		    DescendSel x xs -> pretty x <+> space <+> pretty xs
-		    ChildSel   x xs -> pretty x <+> char '>' <+> pretty xs
-		    AdjSel     x xs -> pretty x <+> char '+' <+> pretty xs
+    pretty x = case x of
+        SSel xs         -> hcat $ map pretty xs
+        CSel comb a b   -> pretty a <+> pretty comb <+> pretty b
+
+instance Pretty SelComb where
+    pretty x = case x of
+            Descend     -> space
+            Child       -> char '>'
+            Adjacent    -> char '+'
+            Sibling     -> char '~'
 
 instance Pretty SimpleSel where
-	pretty x = case x of 
-		     UnivSel    xs -> char '*' <> prettySubs xs
-		     TypeSel el xs -> text el <> prettySubs xs
+    pretty x = case x of 
+        UniversalSel nsp    -> ppMaybe nsp <> char '*' 
+        TypeSel nsp el      -> ppMaybe nsp <> text el
+        AttributeSel attr   -> pretty attr
+        ClassSel a          -> char '.' <> text a
+        IdSel a             -> char '#' <> text a
+        PseudoSel t val     -> pretty t <> pretty val
+        NegationSel a       -> text ":not" <> parens (pretty a)
 
-prettySubs :: [SubSel] -> Doc
-prettySubs = hcat . map pretty
+
+instance Pretty NamespacePrefix where
+    pretty x = case x of
+        AnyNamespace    -> text "*|"
+        BlankNamespace  -> text " |"
+        JustNamespace a -> pretty a <> char '|'
+
+instance Pretty PseudoType where
+    pretty x = case x of
+        OneColon    -> colon
+        TwoColons   -> colon <> colon
 
 instance Pretty PseudoVal where
     pretty x = case x of 
                 PIdent a -> pretty a
                 PFunc  a -> pretty a
 
-instance Pretty SubSel where
-	pretty x = case x of
-		    AttrSel a         -> brackets $ pretty a
-		    ClassSel v        -> char '.' <> text v
-		    IdSel v           -> char '#' <> text v
-		    PseudoSel v       -> char ':' <> pretty v
-
 instance Pretty Attr where
+    pretty (Attr nsp name rhs) = brackets $ 
+        ppMaybe nsp <> pretty name <> ppMaybe rhs
+
+instance Pretty AttrRhs where
+    pretty (AttrRhs comb val) = pretty comb <> pretty val
+
+instance Pretty AttrComb where
     pretty x = case x of
-		    Attr a         -> text a
-		    AttrIs a v     -> text a <> equals <> (doubleQuotes $ text v)
-		    AttrIncl a v   -> text a <> text "~=" <> (doubleQuotes $ text v)
-		    AttrBegins a v -> text a <> text "|=" <> (doubleQuotes $ text v)
-	
--- Value
+        PrefixMatch         -> text "^="
+        SuffixMatch         -> text "$="
+        SubstringMatch      -> text "*="
+        EqualsMatch         -> char '='
+        Includes            -> text "~="
+        DashMatch           -> text "|="
+
+instance Pretty AttrVal where
+    pretty x = case x of
+        AttrValIdent a  -> pretty a
+        AttrValString a -> doubleQuotes $ text a
 
 instance Pretty Value where
     pretty x = case x of
@@ -158,6 +207,7 @@ instance Pretty Value where
         VMs a -> pretty a
         VS a -> pretty a
         VUri a -> pretty a
+        VNth a -> pretty a
 
 -- Values
 
@@ -169,7 +219,8 @@ instance Pretty Expr where
                 SpaceSep x e -> pretty x <+> space <+> pretty e
 
 instance Pretty Func where
-    pretty (Func name arg) = pretty name <> parens (pretty arg)
+    pretty (Func name args) = pretty name 
+        <> parens (hsep $ punctuate comma $ fmap pretty args)
 
 
 instance Pretty Ident where
@@ -190,8 +241,19 @@ instance Pretty Grad where
 instance Pretty Color where
     pretty x = case x of 
         Cword a    -> text a 
-        Crgb r g b -> (text "rgb" <> ) $ parens $ hsep $ 
-                        punctuate comma $ map int [r, g, b]
+        Crgb r g b -> col "rgb" $ fmap VInt [r, g, b]
+        Crgba r g b a -> col "rgba" $ [VInt r, VInt g, VInt b, VDouble a]
+        CrgbPt r g b -> col "rgb" $ fmap VPt [r, g, b]
+        CrgbaPt r g b a -> col "rgba" $ [VPt r, VPt g, VPt b, VDouble a]
+        
+        Chsl r g b -> col "hsl" $ fmap VInt [r, g, b]
+        Chsla r g b a -> col "hsla" $ [VInt r, VInt g, VInt b, VDouble a]
+        ChslPt r g b -> col "hsl" $ fmap VPt [r, g, b]
+        ChslaPt r g b a -> col "hsla" $ [VPt r, VPt g, VPt b, VDouble a]
+        where col :: String -> [Value] -> Doc
+              col name vals = (text name <> ) $  parens $ hsep $
+                        punctuate comma $ map pretty vals
+
 
 instance Pretty Hz where
     pretty (Hz x) = double x <> text "Hz"
@@ -236,7 +298,9 @@ instance Pretty Uri where
     pretty (Uri x) = text "url" <> (parens $ text x)
 
 
-
-
-
-
+instance Pretty Nth where
+    pretty x = case x of
+        N a b   -> int a <> text "*n+" <> int b
+        Nth a   -> int a
+        Odd     -> text "odd"
+        Even    -> text "even"
