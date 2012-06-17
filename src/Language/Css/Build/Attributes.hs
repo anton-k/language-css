@@ -1,1016 +1,1218 @@
 -- | Html 4 ++ Html 5 attributes
 module Language.Css.Build.Attributes (
-    abbr,
-    accept,
-    acceptCharset,
-    accesskey,
-    action,
-    align,
-    alt,
-    archive,
-    async,
-    autocomplete,
-    autofocus,
-    autoplay,
-    axis,
-    background,
-    bgcolor,
-    border,
-    cellpadding,
-    cellspacing,
-    challenge,
-    char,
-    charoff,
-    charset,
-    checked,
-    cite,
-    class',
-    classid,
-    clear,
-    codebase,
-    codetype,
-    cols,
-    colspan,
-    compact,
-    content,
-    contenteditable,
-    contextmenu,
-    controls,
-    coords,
-    data',
-    datetime,
-    declare,
-    defer,
-    dir,
-    disabled,
-    draggable,
-    enctype,
-    for,
-    form,
-    formaction,
-    formenctype,
-    formmethod,
-    formnovalidate,
-    formtarget,
-    frame,
-    frameborder,
-    headers,
-    height,
-    hidden,
-    high,
-    href,
-    hreflang,
-    hspace,
-    httpEquiv,
-    icon,
-    id,
-    ismap,
-    item,
-    itemprop,
-    keytype,
-    label,
-    lang,
-    language,
-    list,
-    loop,
-    low,
-    manifest,
-    max,
-    maxlength,
-    media,
-    method,
-    min,
-    multiple,
-    name,
-    nohref,
-    noshade,
-    novalidate,
-    nowrap,
-    onabort,
-    onbeforeonload,
-    onbeforeprint,
-    onblur,
-    oncanplay,
-    oncanplaythrough,
-    onchange,
-    onclick,
-    oncontextmenu,
-    ondblclick,
-    ondrag,
-    ondragend,
-    ondragenter,
-    ondragleave,
-    ondragover,
-    ondragstart,
-    ondrop,
-    ondurationchange,
-    onemptied,
-    onended,
-    onerror,
-    onfocus,
-    onformchange,
-    onforminput,
-    onhaschange,
-    oninput,
-    oninvalid,
-    onkeydown,
-    onkeypress,
-    onkeyup,
-    onload,
-    onloadeddata,
-    onloadedmetadata,
-    onloadstart,
-    onmessage,
-    onmousedown,
-    onmousemove,
-    onmouseout,
-    onmouseover,
-    onmouseup,
-    onmousewheel,
-    ononline,
-    onpagehide,
-    onpageshow,
-    onpause,
-    onplay,
-    onplaying,
-    onprogress,
-    onpropstate,
-    onratechange,
-    onreadystatechange,
-    onredo,
-    onreset,
-    onresize,
-    onscroll,
-    onseeked,
-    onseeking,
-    onselect,
-    onstalled,
-    onstorage,
-    onsubmit,
-    onsuspend,
-    ontimeupdate,
-    onundo,
-    onunload,
-    onvolumechange,
-    onwaiting,
-    open,
-    optimum,
-    pattern,
-    ping,
-    placeholder,
-    preload,
-    profile,
-    pubdate,
-    radiogroup,
-    readonly,
-    rel,
-    required,
-    rev,
-    reversed,
-    rows,
-    rowspan,
-    rules,
-    sandbox,
-    scheme,
-    scope,
-    scoped,
-    scrolling,
-    seamless,
-    selected,
-    shape,
-    size,
-    sizes,
-    span,
-    spellcheck,
-    src,
-    srcdoc,
-    standby,
-    start,
-    step,
-    style,
-    subject,
-    summary,
-    tabindex,
-    target,
-    title,
-    type',
-    usemap,
-    valign,
-    value,
-    valuetype,
-    vspace,
-    width,
-    wrap,
-    xmlns
+abbr,
+accept,
+acceptCharset,
+accesskey,
+action,
+align,
+alt,
+archive,
+async,
+autocomplete,
+autofocus,
+autoplay,
+axis,
+background,
+bgcolor,
+border,
+cellpadding,
+cellspacing,
+challenge,
+char,
+charoff,
+charset,
+checked,
+cite,
+class',
+classid,
+clear,
+codebase,
+codetype,
+cols,
+colspan,
+compact,
+content,
+contenteditable,
+contextmenu,
+controls,
+coords,
+data',
+datetime,
+declare,
+defer,
+dir,
+disabled,
+draggable,
+enctype,
+for,
+form,
+formaction,
+formenctype,
+formmethod,
+formnovalidate,
+formtarget,
+frame,
+frameborder,
+headers,
+height,
+hidden,
+high,
+href,
+hreflang,
+hspace,
+httpEquiv,
+icon,
+id',
+ismap,
+item,
+itemprop,
+keytype,
+label,
+lang,
+language,
+list,
+loop,
+low,
+manifest,
+max,
+maxlength,
+media,
+method,
+min,
+multiple,
+name,
+nohref,
+noshade,
+novalidate,
+nowrap,
+onabort,
+onbeforeonload,
+onbeforeprint,
+onblur,
+oncanplay,
+oncanplaythrough,
+onchange,
+onclick,
+oncontextmenu,
+ondblclick,
+ondrag,
+ondragend,
+ondragenter,
+ondragleave,
+ondragover,
+ondragstart,
+ondrop,
+ondurationchange,
+onemptied,
+onended,
+onerror,
+onfocus,
+onformchange,
+onforminput,
+onhaschange,
+oninput,
+oninvalid,
+onkeydown,
+onkeypress,
+onkeyup,
+onload,
+onloadeddata,
+onloadedmetadata,
+onloadstart,
+onmessage,
+onmousedown,
+onmousemove,
+onmouseout,
+onmouseover,
+onmouseup,
+onmousewheel,
+ononline,
+onpagehide,
+onpageshow,
+onpause,
+onplay,
+onplaying,
+onprogress,
+onpropstate,
+onratechange,
+onreadystatechange,
+onredo,
+onreset,
+onresize,
+onscroll,
+onseeked,
+onseeking,
+onselect,
+onstalled,
+onstorage,
+onsubmit,
+onsuspend,
+ontimeupdate,
+onundo,
+onunload,
+onvolumechange,
+onwaiting,
+open,
+optimum,
+pattern,
+ping,
+placeholder,
+preload,
+profile,
+pubdate,
+radiogroup,
+readonly,
+rel,
+required,
+rev,
+reversed,
+rows,
+rowspan,
+rules,
+sandbox,
+scheme,
+scope,
+scoped,
+scrolling,
+seamless,
+selected,
+shape,
+size,
+sizes,
+span,
+spellcheck,
+src,
+srcdoc,
+standby,
+start,
+step,
+style,
+subject,
+summary,
+tabindex,
+target,
+title,
+type',
+usemap,
+valign,
+value,
+valuetype,
+vspace,
+width,
+wrap,
+xmlns
 ) where
-import Language.Css.Build(Attrs(..))
+import Language.Css.Syntax(Attr)
+import Language.Css.Build(Idents(..))
 import Prelude ()
 
 
 -- | @abbr@ attribute
-abbr :: Attrs a => a
-abbr = attr "abbr"
+abbr :: Attr
+abbr = ident "abbr"
+
 
 -- | @accept@ attribute
-accept :: Attrs a => a
-accept = attr "accept"
+accept :: Attr
+accept = ident "accept"
 
--- | @accept-charset@ attribute
-acceptCharset :: Attrs a => a
-acceptCharset = attr "accept-charset"
+
+-- | @acceptCharset@ attribute
+acceptCharset :: Attr
+acceptCharset = ident "acceptCharset"
+
 
 -- | @accesskey@ attribute
-accesskey :: Attrs a => a
-accesskey = attr "accesskey"
+accesskey :: Attr
+accesskey = ident "accesskey"
+
 
 -- | @action@ attribute
-action :: Attrs a => a
-action = attr "action"
+action :: Attr
+action = ident "action"
+
 
 -- | @align@ attribute
-align :: Attrs a => a
-align = attr "align"
+align :: Attr
+align = ident "align"
+
 
 -- | @alt@ attribute
-alt :: Attrs a => a
-alt = attr "alt"
+alt :: Attr
+alt = ident "alt"
+
 
 -- | @archive@ attribute
-archive :: Attrs a => a
-archive = attr "archive"
+archive :: Attr
+archive = ident "archive"
+
 
 -- | @async@ attribute
-async :: Attrs a => a
-async = attr "async"
+async :: Attr
+async = ident "async"
+
 
 -- | @autocomplete@ attribute
-autocomplete :: Attrs a => a
-autocomplete = attr "autocomplete"
+autocomplete :: Attr
+autocomplete = ident "autocomplete"
+
 
 -- | @autofocus@ attribute
-autofocus :: Attrs a => a
-autofocus = attr "autofocus"
+autofocus :: Attr
+autofocus = ident "autofocus"
+
 
 -- | @autoplay@ attribute
-autoplay :: Attrs a => a
-autoplay = attr "autoplay"
+autoplay :: Attr
+autoplay = ident "autoplay"
+
 
 -- | @axis@ attribute
-axis :: Attrs a => a
-axis = attr "axis"
+axis :: Attr
+axis = ident "axis"
+
 
 -- | @background@ attribute
-background :: Attrs a => a
-background = attr "background"
+background :: Attr
+background = ident "background"
+
 
 -- | @bgcolor@ attribute
-bgcolor :: Attrs a => a
-bgcolor = attr "bgcolor"
+bgcolor :: Attr
+bgcolor = ident "bgcolor"
+
 
 -- | @border@ attribute
-border :: Attrs a => a
-border = attr "border"
+border :: Attr
+border = ident "border"
+
 
 -- | @cellpadding@ attribute
-cellpadding :: Attrs a => a
-cellpadding = attr "cellpadding"
+cellpadding :: Attr
+cellpadding = ident "cellpadding"
+
 
 -- | @cellspacing@ attribute
-cellspacing :: Attrs a => a
-cellspacing = attr "cellspacing"
+cellspacing :: Attr
+cellspacing = ident "cellspacing"
+
 
 -- | @challenge@ attribute
-challenge :: Attrs a => a
-challenge = attr "challenge"
+challenge :: Attr
+challenge = ident "challenge"
+
 
 -- | @char@ attribute
-char :: Attrs a => a
-char = attr "char"
+char :: Attr
+char = ident "char"
+
 
 -- | @charoff@ attribute
-charoff :: Attrs a => a
-charoff = attr "charoff"
+charoff :: Attr
+charoff = ident "charoff"
+
 
 -- | @charset@ attribute
-charset :: Attrs a => a
-charset = attr "charset"
+charset :: Attr
+charset = ident "charset"
+
 
 -- | @checked@ attribute
-checked :: Attrs a => a
-checked = attr "checked"
+checked :: Attr
+checked = ident "checked"
+
 
 -- | @cite@ attribute
-cite :: Attrs a => a
-cite = attr "cite"
+cite :: Attr
+cite = ident "cite"
 
--- | @class@ attribute
-class' :: Attrs a => a
-class' = attr "class"
+
+-- | @class'@ attribute
+class' :: Attr
+class' = ident "class"
+
 
 -- | @classid@ attribute
-classid :: Attrs a => a
-classid = attr "classid"
+classid :: Attr
+classid = ident "classid"
+
 
 -- | @clear@ attribute
-clear :: Attrs a => a
-clear = attr "clear"
+clear :: Attr
+clear = ident "clear"
+
 
 -- | @codebase@ attribute
-codebase :: Attrs a => a
-codebase = attr "codebase"
+codebase :: Attr
+codebase = ident "codebase"
+
 
 -- | @codetype@ attribute
-codetype :: Attrs a => a
-codetype = attr "codetype"
+codetype :: Attr
+codetype = ident "codetype"
+
 
 -- | @cols@ attribute
-cols :: Attrs a => a
-cols = attr "cols"
+cols :: Attr
+cols = ident "cols"
+
 
 -- | @colspan@ attribute
-colspan :: Attrs a => a
-colspan = attr "colspan"
+colspan :: Attr
+colspan = ident "colspan"
+
 
 -- | @compact@ attribute
-compact :: Attrs a => a
-compact = attr "compact"
+compact :: Attr
+compact = ident "compact"
+
 
 -- | @content@ attribute
-content :: Attrs a => a
-content = attr "content"
+content :: Attr
+content = ident "content"
+
 
 -- | @contenteditable@ attribute
-contenteditable :: Attrs a => a
-contenteditable = attr "contenteditable"
+contenteditable :: Attr
+contenteditable = ident "contenteditable"
+
 
 -- | @contextmenu@ attribute
-contextmenu :: Attrs a => a
-contextmenu = attr "contextmenu"
+contextmenu :: Attr
+contextmenu = ident "contextmenu"
+
 
 -- | @controls@ attribute
-controls :: Attrs a => a
-controls = attr "controls"
+controls :: Attr
+controls = ident "controls"
+
 
 -- | @coords@ attribute
-coords :: Attrs a => a
-coords = attr "coords"
+coords :: Attr
+coords = ident "coords"
 
--- | @data@ attribute
-data' :: Attrs a => a
-data' = attr "data"
+
+-- | @data'@ attribute
+data' :: Attr
+data' = ident "data"
+
 
 -- | @datetime@ attribute
-datetime :: Attrs a => a
-datetime = attr "datetime"
+datetime :: Attr
+datetime = ident "datetime"
+
 
 -- | @declare@ attribute
-declare :: Attrs a => a
-declare = attr "declare"
+declare :: Attr
+declare = ident "declare"
+
 
 -- | @defer@ attribute
-defer :: Attrs a => a
-defer = attr "defer"
+defer :: Attr
+defer = ident "defer"
+
 
 -- | @dir@ attribute
-dir :: Attrs a => a
-dir = attr "dir"
+dir :: Attr
+dir = ident "dir"
+
 
 -- | @disabled@ attribute
-disabled :: Attrs a => a
-disabled = attr "disabled"
+disabled :: Attr
+disabled = ident "disabled"
+
 
 -- | @draggable@ attribute
-draggable :: Attrs a => a
-draggable = attr "draggable"
+draggable :: Attr
+draggable = ident "draggable"
+
 
 -- | @enctype@ attribute
-enctype :: Attrs a => a
-enctype = attr "enctype"
+enctype :: Attr
+enctype = ident "enctype"
+
 
 -- | @for@ attribute
-for :: Attrs a => a
-for = attr "for"
+for :: Attr
+for = ident "for"
+
 
 -- | @form@ attribute
-form :: Attrs a => a
-form = attr "form"
+form :: Attr
+form = ident "form"
+
 
 -- | @formaction@ attribute
-formaction :: Attrs a => a
-formaction = attr "formaction"
+formaction :: Attr
+formaction = ident "formaction"
+
 
 -- | @formenctype@ attribute
-formenctype :: Attrs a => a
-formenctype = attr "formenctype"
+formenctype :: Attr
+formenctype = ident "formenctype"
+
 
 -- | @formmethod@ attribute
-formmethod :: Attrs a => a
-formmethod = attr "formmethod"
+formmethod :: Attr
+formmethod = ident "formmethod"
+
 
 -- | @formnovalidate@ attribute
-formnovalidate :: Attrs a => a
-formnovalidate = attr "formnovalidate"
+formnovalidate :: Attr
+formnovalidate = ident "formnovalidate"
+
 
 -- | @formtarget@ attribute
-formtarget :: Attrs a => a
-formtarget = attr "formtarget"
+formtarget :: Attr
+formtarget = ident "formtarget"
+
 
 -- | @frame@ attribute
-frame :: Attrs a => a
-frame = attr "frame"
+frame :: Attr
+frame = ident "frame"
+
 
 -- | @frameborder@ attribute
-frameborder :: Attrs a => a
-frameborder = attr "frameborder"
+frameborder :: Attr
+frameborder = ident "frameborder"
+
 
 -- | @headers@ attribute
-headers :: Attrs a => a
-headers = attr "headers"
+headers :: Attr
+headers = ident "headers"
+
 
 -- | @height@ attribute
-height :: Attrs a => a
-height = attr "height"
+height :: Attr
+height = ident "height"
+
 
 -- | @hidden@ attribute
-hidden :: Attrs a => a
-hidden = attr "hidden"
+hidden :: Attr
+hidden = ident "hidden"
+
 
 -- | @high@ attribute
-high :: Attrs a => a
-high = attr "high"
+high :: Attr
+high = ident "high"
+
 
 -- | @href@ attribute
-href :: Attrs a => a
-href = attr "href"
+href :: Attr
+href = ident "href"
+
 
 -- | @hreflang@ attribute
-hreflang :: Attrs a => a
-hreflang = attr "hreflang"
+hreflang :: Attr
+hreflang = ident "hreflang"
+
 
 -- | @hspace@ attribute
-hspace :: Attrs a => a
-hspace = attr "hspace"
+hspace :: Attr
+hspace = ident "hspace"
 
--- | @http-equiv@ attribute
-httpEquiv :: Attrs a => a
-httpEquiv = attr "http-equiv"
+
+-- | @httpEquiv@ attribute
+httpEquiv :: Attr
+httpEquiv = ident "httpEquiv"
+
 
 -- | @icon@ attribute
-icon :: Attrs a => a
-icon = attr "icon"
+icon :: Attr
+icon = ident "icon"
 
--- | @id@ attribute
-id :: Attrs a => a
-id = attr "id"
+
+-- | @id'@ attribute
+id' :: Attr
+id' = ident "id"
+
 
 -- | @ismap@ attribute
-ismap :: Attrs a => a
-ismap = attr "ismap"
+ismap :: Attr
+ismap = ident "ismap"
+
 
 -- | @item@ attribute
-item :: Attrs a => a
-item = attr "item"
+item :: Attr
+item = ident "item"
+
 
 -- | @itemprop@ attribute
-itemprop :: Attrs a => a
-itemprop = attr "itemprop"
+itemprop :: Attr
+itemprop = ident "itemprop"
+
 
 -- | @keytype@ attribute
-keytype :: Attrs a => a
-keytype = attr "keytype"
+keytype :: Attr
+keytype = ident "keytype"
+
 
 -- | @label@ attribute
-label :: Attrs a => a
-label = attr "label"
+label :: Attr
+label = ident "label"
+
 
 -- | @lang@ attribute
-lang :: Attrs a => a
-lang = attr "lang"
+lang :: Attr
+lang = ident "lang"
+
 
 -- | @language@ attribute
-language :: Attrs a => a
-language = attr "language"
+language :: Attr
+language = ident "language"
+
 
 -- | @list@ attribute
-list :: Attrs a => a
-list = attr "list"
+list :: Attr
+list = ident "list"
+
 
 -- | @loop@ attribute
-loop :: Attrs a => a
-loop = attr "loop"
+loop :: Attr
+loop = ident "loop"
+
 
 -- | @low@ attribute
-low :: Attrs a => a
-low = attr "low"
+low :: Attr
+low = ident "low"
+
 
 -- | @manifest@ attribute
-manifest :: Attrs a => a
-manifest = attr "manifest"
+manifest :: Attr
+manifest = ident "manifest"
+
 
 -- | @max@ attribute
-max :: Attrs a => a
-max = attr "max"
+max :: Attr
+max = ident "max"
+
 
 -- | @maxlength@ attribute
-maxlength :: Attrs a => a
-maxlength = attr "maxlength"
+maxlength :: Attr
+maxlength = ident "maxlength"
+
 
 -- | @media@ attribute
-media :: Attrs a => a
-media = attr "media"
+media :: Attr
+media = ident "media"
+
 
 -- | @method@ attribute
-method :: Attrs a => a
-method = attr "method"
+method :: Attr
+method = ident "method"
+
 
 -- | @min@ attribute
-min :: Attrs a => a
-min = attr "min"
+min :: Attr
+min = ident "min"
+
 
 -- | @multiple@ attribute
-multiple :: Attrs a => a
-multiple = attr "multiple"
+multiple :: Attr
+multiple = ident "multiple"
+
 
 -- | @name@ attribute
-name :: Attrs a => a
-name = attr "name"
+name :: Attr
+name = ident "name"
+
 
 -- | @nohref@ attribute
-nohref :: Attrs a => a
-nohref = attr "nohref"
+nohref :: Attr
+nohref = ident "nohref"
+
 
 -- | @noshade@ attribute
-noshade :: Attrs a => a
-noshade = attr "noshade"
+noshade :: Attr
+noshade = ident "noshade"
+
 
 -- | @novalidate@ attribute
-novalidate :: Attrs a => a
-novalidate = attr "novalidate"
+novalidate :: Attr
+novalidate = ident "novalidate"
+
 
 -- | @nowrap@ attribute
-nowrap :: Attrs a => a
-nowrap = attr "nowrap"
+nowrap :: Attr
+nowrap = ident "nowrap"
+
 
 -- | @onabort@ attribute
-onabort :: Attrs a => a
-onabort = attr "onabort"
+onabort :: Attr
+onabort = ident "onabort"
+
 
 -- | @onbeforeonload@ attribute
-onbeforeonload :: Attrs a => a
-onbeforeonload = attr "onbeforeonload"
+onbeforeonload :: Attr
+onbeforeonload = ident "onbeforeonload"
+
 
 -- | @onbeforeprint@ attribute
-onbeforeprint :: Attrs a => a
-onbeforeprint = attr "onbeforeprint"
+onbeforeprint :: Attr
+onbeforeprint = ident "onbeforeprint"
+
 
 -- | @onblur@ attribute
-onblur :: Attrs a => a
-onblur = attr "onblur"
+onblur :: Attr
+onblur = ident "onblur"
+
 
 -- | @oncanplay@ attribute
-oncanplay :: Attrs a => a
-oncanplay = attr "oncanplay"
+oncanplay :: Attr
+oncanplay = ident "oncanplay"
+
 
 -- | @oncanplaythrough@ attribute
-oncanplaythrough :: Attrs a => a
-oncanplaythrough = attr "oncanplaythrough"
+oncanplaythrough :: Attr
+oncanplaythrough = ident "oncanplaythrough"
+
 
 -- | @onchange@ attribute
-onchange :: Attrs a => a
-onchange = attr "onchange"
+onchange :: Attr
+onchange = ident "onchange"
+
 
 -- | @onclick@ attribute
-onclick :: Attrs a => a
-onclick = attr "onclick"
+onclick :: Attr
+onclick = ident "onclick"
+
 
 -- | @oncontextmenu@ attribute
-oncontextmenu :: Attrs a => a
-oncontextmenu = attr "oncontextmenu"
+oncontextmenu :: Attr
+oncontextmenu = ident "oncontextmenu"
+
 
 -- | @ondblclick@ attribute
-ondblclick :: Attrs a => a
-ondblclick = attr "ondblclick"
+ondblclick :: Attr
+ondblclick = ident "ondblclick"
+
 
 -- | @ondrag@ attribute
-ondrag :: Attrs a => a
-ondrag = attr "ondrag"
+ondrag :: Attr
+ondrag = ident "ondrag"
+
 
 -- | @ondragend@ attribute
-ondragend :: Attrs a => a
-ondragend = attr "ondragend"
+ondragend :: Attr
+ondragend = ident "ondragend"
+
 
 -- | @ondragenter@ attribute
-ondragenter :: Attrs a => a
-ondragenter = attr "ondragenter"
+ondragenter :: Attr
+ondragenter = ident "ondragenter"
+
 
 -- | @ondragleave@ attribute
-ondragleave :: Attrs a => a
-ondragleave = attr "ondragleave"
+ondragleave :: Attr
+ondragleave = ident "ondragleave"
+
 
 -- | @ondragover@ attribute
-ondragover :: Attrs a => a
-ondragover = attr "ondragover"
+ondragover :: Attr
+ondragover = ident "ondragover"
+
 
 -- | @ondragstart@ attribute
-ondragstart :: Attrs a => a
-ondragstart = attr "ondragstart"
+ondragstart :: Attr
+ondragstart = ident "ondragstart"
+
 
 -- | @ondrop@ attribute
-ondrop :: Attrs a => a
-ondrop = attr "ondrop"
+ondrop :: Attr
+ondrop = ident "ondrop"
+
 
 -- | @ondurationchange@ attribute
-ondurationchange :: Attrs a => a
-ondurationchange = attr "ondurationchange"
+ondurationchange :: Attr
+ondurationchange = ident "ondurationchange"
+
 
 -- | @onemptied@ attribute
-onemptied :: Attrs a => a
-onemptied = attr "onemptied"
+onemptied :: Attr
+onemptied = ident "onemptied"
+
 
 -- | @onended@ attribute
-onended :: Attrs a => a
-onended = attr "onended"
+onended :: Attr
+onended = ident "onended"
+
 
 -- | @onerror@ attribute
-onerror :: Attrs a => a
-onerror = attr "onerror"
+onerror :: Attr
+onerror = ident "onerror"
+
 
 -- | @onfocus@ attribute
-onfocus :: Attrs a => a
-onfocus = attr "onfocus"
+onfocus :: Attr
+onfocus = ident "onfocus"
+
 
 -- | @onformchange@ attribute
-onformchange :: Attrs a => a
-onformchange = attr "onformchange"
+onformchange :: Attr
+onformchange = ident "onformchange"
+
 
 -- | @onforminput@ attribute
-onforminput :: Attrs a => a
-onforminput = attr "onforminput"
+onforminput :: Attr
+onforminput = ident "onforminput"
+
 
 -- | @onhaschange@ attribute
-onhaschange :: Attrs a => a
-onhaschange = attr "onhaschange"
+onhaschange :: Attr
+onhaschange = ident "onhaschange"
+
 
 -- | @oninput@ attribute
-oninput :: Attrs a => a
-oninput = attr "oninput"
+oninput :: Attr
+oninput = ident "oninput"
+
 
 -- | @oninvalid@ attribute
-oninvalid :: Attrs a => a
-oninvalid = attr "oninvalid"
+oninvalid :: Attr
+oninvalid = ident "oninvalid"
+
 
 -- | @onkeydown@ attribute
-onkeydown :: Attrs a => a
-onkeydown = attr "onkeydown"
+onkeydown :: Attr
+onkeydown = ident "onkeydown"
+
 
 -- | @onkeypress@ attribute
-onkeypress :: Attrs a => a
-onkeypress = attr "onkeypress"
+onkeypress :: Attr
+onkeypress = ident "onkeypress"
+
 
 -- | @onkeyup@ attribute
-onkeyup :: Attrs a => a
-onkeyup = attr "onkeyup"
+onkeyup :: Attr
+onkeyup = ident "onkeyup"
+
 
 -- | @onload@ attribute
-onload :: Attrs a => a
-onload = attr "onload"
+onload :: Attr
+onload = ident "onload"
+
 
 -- | @onloadeddata@ attribute
-onloadeddata :: Attrs a => a
-onloadeddata = attr "onloadeddata"
+onloadeddata :: Attr
+onloadeddata = ident "onloadeddata"
+
 
 -- | @onloadedmetadata@ attribute
-onloadedmetadata :: Attrs a => a
-onloadedmetadata = attr "onloadedmetadata"
+onloadedmetadata :: Attr
+onloadedmetadata = ident "onloadedmetadata"
+
 
 -- | @onloadstart@ attribute
-onloadstart :: Attrs a => a
-onloadstart = attr "onloadstart"
+onloadstart :: Attr
+onloadstart = ident "onloadstart"
+
 
 -- | @onmessage@ attribute
-onmessage :: Attrs a => a
-onmessage = attr "onmessage"
+onmessage :: Attr
+onmessage = ident "onmessage"
+
 
 -- | @onmousedown@ attribute
-onmousedown :: Attrs a => a
-onmousedown = attr "onmousedown"
+onmousedown :: Attr
+onmousedown = ident "onmousedown"
+
 
 -- | @onmousemove@ attribute
-onmousemove :: Attrs a => a
-onmousemove = attr "onmousemove"
+onmousemove :: Attr
+onmousemove = ident "onmousemove"
+
 
 -- | @onmouseout@ attribute
-onmouseout :: Attrs a => a
-onmouseout = attr "onmouseout"
+onmouseout :: Attr
+onmouseout = ident "onmouseout"
+
 
 -- | @onmouseover@ attribute
-onmouseover :: Attrs a => a
-onmouseover = attr "onmouseover"
+onmouseover :: Attr
+onmouseover = ident "onmouseover"
+
 
 -- | @onmouseup@ attribute
-onmouseup :: Attrs a => a
-onmouseup = attr "onmouseup"
+onmouseup :: Attr
+onmouseup = ident "onmouseup"
+
 
 -- | @onmousewheel@ attribute
-onmousewheel :: Attrs a => a
-onmousewheel = attr "onmousewheel"
+onmousewheel :: Attr
+onmousewheel = ident "onmousewheel"
+
 
 -- | @ononline@ attribute
-ononline :: Attrs a => a
-ononline = attr "ononline"
+ononline :: Attr
+ononline = ident "ononline"
+
 
 -- | @onpagehide@ attribute
-onpagehide :: Attrs a => a
-onpagehide = attr "onpagehide"
+onpagehide :: Attr
+onpagehide = ident "onpagehide"
+
 
 -- | @onpageshow@ attribute
-onpageshow :: Attrs a => a
-onpageshow = attr "onpageshow"
+onpageshow :: Attr
+onpageshow = ident "onpageshow"
+
 
 -- | @onpause@ attribute
-onpause :: Attrs a => a
-onpause = attr "onpause"
+onpause :: Attr
+onpause = ident "onpause"
+
 
 -- | @onplay@ attribute
-onplay :: Attrs a => a
-onplay = attr "onplay"
+onplay :: Attr
+onplay = ident "onplay"
+
 
 -- | @onplaying@ attribute
-onplaying :: Attrs a => a
-onplaying = attr "onplaying"
+onplaying :: Attr
+onplaying = ident "onplaying"
+
 
 -- | @onprogress@ attribute
-onprogress :: Attrs a => a
-onprogress = attr "onprogress"
+onprogress :: Attr
+onprogress = ident "onprogress"
+
 
 -- | @onpropstate@ attribute
-onpropstate :: Attrs a => a
-onpropstate = attr "onpropstate"
+onpropstate :: Attr
+onpropstate = ident "onpropstate"
+
 
 -- | @onratechange@ attribute
-onratechange :: Attrs a => a
-onratechange = attr "onratechange"
+onratechange :: Attr
+onratechange = ident "onratechange"
+
 
 -- | @onreadystatechange@ attribute
-onreadystatechange :: Attrs a => a
-onreadystatechange = attr "onreadystatechange"
+onreadystatechange :: Attr
+onreadystatechange = ident "onreadystatechange"
+
 
 -- | @onredo@ attribute
-onredo :: Attrs a => a
-onredo = attr "onredo"
+onredo :: Attr
+onredo = ident "onredo"
+
 
 -- | @onreset@ attribute
-onreset :: Attrs a => a
-onreset = attr "onreset"
+onreset :: Attr
+onreset = ident "onreset"
+
 
 -- | @onresize@ attribute
-onresize :: Attrs a => a
-onresize = attr "onresize"
+onresize :: Attr
+onresize = ident "onresize"
+
 
 -- | @onscroll@ attribute
-onscroll :: Attrs a => a
-onscroll = attr "onscroll"
+onscroll :: Attr
+onscroll = ident "onscroll"
+
 
 -- | @onseeked@ attribute
-onseeked :: Attrs a => a
-onseeked = attr "onseeked"
+onseeked :: Attr
+onseeked = ident "onseeked"
+
 
 -- | @onseeking@ attribute
-onseeking :: Attrs a => a
-onseeking = attr "onseeking"
+onseeking :: Attr
+onseeking = ident "onseeking"
+
 
 -- | @onselect@ attribute
-onselect :: Attrs a => a
-onselect = attr "onselect"
+onselect :: Attr
+onselect = ident "onselect"
+
 
 -- | @onstalled@ attribute
-onstalled :: Attrs a => a
-onstalled = attr "onstalled"
+onstalled :: Attr
+onstalled = ident "onstalled"
+
 
 -- | @onstorage@ attribute
-onstorage :: Attrs a => a
-onstorage = attr "onstorage"
+onstorage :: Attr
+onstorage = ident "onstorage"
+
 
 -- | @onsubmit@ attribute
-onsubmit :: Attrs a => a
-onsubmit = attr "onsubmit"
+onsubmit :: Attr
+onsubmit = ident "onsubmit"
+
 
 -- | @onsuspend@ attribute
-onsuspend :: Attrs a => a
-onsuspend = attr "onsuspend"
+onsuspend :: Attr
+onsuspend = ident "onsuspend"
+
 
 -- | @ontimeupdate@ attribute
-ontimeupdate :: Attrs a => a
-ontimeupdate = attr "ontimeupdate"
+ontimeupdate :: Attr
+ontimeupdate = ident "ontimeupdate"
+
 
 -- | @onundo@ attribute
-onundo :: Attrs a => a
-onundo = attr "onundo"
+onundo :: Attr
+onundo = ident "onundo"
+
 
 -- | @onunload@ attribute
-onunload :: Attrs a => a
-onunload = attr "onunload"
+onunload :: Attr
+onunload = ident "onunload"
+
 
 -- | @onvolumechange@ attribute
-onvolumechange :: Attrs a => a
-onvolumechange = attr "onvolumechange"
+onvolumechange :: Attr
+onvolumechange = ident "onvolumechange"
+
 
 -- | @onwaiting@ attribute
-onwaiting :: Attrs a => a
-onwaiting = attr "onwaiting"
+onwaiting :: Attr
+onwaiting = ident "onwaiting"
+
 
 -- | @open@ attribute
-open :: Attrs a => a
-open = attr "open"
+open :: Attr
+open = ident "open"
+
 
 -- | @optimum@ attribute
-optimum :: Attrs a => a
-optimum = attr "optimum"
+optimum :: Attr
+optimum = ident "optimum"
+
 
 -- | @pattern@ attribute
-pattern :: Attrs a => a
-pattern = attr "pattern"
+pattern :: Attr
+pattern = ident "pattern"
+
 
 -- | @ping@ attribute
-ping :: Attrs a => a
-ping = attr "ping"
+ping :: Attr
+ping = ident "ping"
+
 
 -- | @placeholder@ attribute
-placeholder :: Attrs a => a
-placeholder = attr "placeholder"
+placeholder :: Attr
+placeholder = ident "placeholder"
+
 
 -- | @preload@ attribute
-preload :: Attrs a => a
-preload = attr "preload"
+preload :: Attr
+preload = ident "preload"
+
 
 -- | @profile@ attribute
-profile :: Attrs a => a
-profile = attr "profile"
+profile :: Attr
+profile = ident "profile"
+
 
 -- | @pubdate@ attribute
-pubdate :: Attrs a => a
-pubdate = attr "pubdate"
+pubdate :: Attr
+pubdate = ident "pubdate"
+
 
 -- | @radiogroup@ attribute
-radiogroup :: Attrs a => a
-radiogroup = attr "radiogroup"
+radiogroup :: Attr
+radiogroup = ident "radiogroup"
+
 
 -- | @readonly@ attribute
-readonly :: Attrs a => a
-readonly = attr "readonly"
+readonly :: Attr
+readonly = ident "readonly"
+
 
 -- | @rel@ attribute
-rel :: Attrs a => a
-rel = attr "rel"
+rel :: Attr
+rel = ident "rel"
+
 
 -- | @required@ attribute
-required :: Attrs a => a
-required = attr "required"
+required :: Attr
+required = ident "required"
+
 
 -- | @rev@ attribute
-rev :: Attrs a => a
-rev = attr "rev"
+rev :: Attr
+rev = ident "rev"
+
 
 -- | @reversed@ attribute
-reversed :: Attrs a => a
-reversed = attr "reversed"
+reversed :: Attr
+reversed = ident "reversed"
+
 
 -- | @rows@ attribute
-rows :: Attrs a => a
-rows = attr "rows"
+rows :: Attr
+rows = ident "rows"
+
 
 -- | @rowspan@ attribute
-rowspan :: Attrs a => a
-rowspan = attr "rowspan"
+rowspan :: Attr
+rowspan = ident "rowspan"
+
 
 -- | @rules@ attribute
-rules :: Attrs a => a
-rules = attr "rules"
+rules :: Attr
+rules = ident "rules"
+
 
 -- | @sandbox@ attribute
-sandbox :: Attrs a => a
-sandbox = attr "sandbox"
+sandbox :: Attr
+sandbox = ident "sandbox"
+
 
 -- | @scheme@ attribute
-scheme :: Attrs a => a
-scheme = attr "scheme"
+scheme :: Attr
+scheme = ident "scheme"
+
 
 -- | @scope@ attribute
-scope :: Attrs a => a
-scope = attr "scope"
+scope :: Attr
+scope = ident "scope"
+
 
 -- | @scoped@ attribute
-scoped :: Attrs a => a
-scoped = attr "scoped"
+scoped :: Attr
+scoped = ident "scoped"
+
 
 -- | @scrolling@ attribute
-scrolling :: Attrs a => a
-scrolling = attr "scrolling"
+scrolling :: Attr
+scrolling = ident "scrolling"
+
 
 -- | @seamless@ attribute
-seamless :: Attrs a => a
-seamless = attr "seamless"
+seamless :: Attr
+seamless = ident "seamless"
+
 
 -- | @selected@ attribute
-selected :: Attrs a => a
-selected = attr "selected"
+selected :: Attr
+selected = ident "selected"
+
 
 -- | @shape@ attribute
-shape :: Attrs a => a
-shape = attr "shape"
+shape :: Attr
+shape = ident "shape"
+
 
 -- | @size@ attribute
-size :: Attrs a => a
-size = attr "size"
+size :: Attr
+size = ident "size"
+
 
 -- | @sizes@ attribute
-sizes :: Attrs a => a
-sizes = attr "sizes"
+sizes :: Attr
+sizes = ident "sizes"
+
 
 -- | @span@ attribute
-span :: Attrs a => a
-span = attr "span"
+span :: Attr
+span = ident "span"
+
 
 -- | @spellcheck@ attribute
-spellcheck :: Attrs a => a
-spellcheck = attr "spellcheck"
+spellcheck :: Attr
+spellcheck = ident "spellcheck"
+
 
 -- | @src@ attribute
-src :: Attrs a => a
-src = attr "src"
+src :: Attr
+src = ident "src"
+
 
 -- | @srcdoc@ attribute
-srcdoc :: Attrs a => a
-srcdoc = attr "srcdoc"
+srcdoc :: Attr
+srcdoc = ident "srcdoc"
+
 
 -- | @standby@ attribute
-standby :: Attrs a => a
-standby = attr "standby"
+standby :: Attr
+standby = ident "standby"
+
 
 -- | @start@ attribute
-start :: Attrs a => a
-start = attr "start"
+start :: Attr
+start = ident "start"
+
 
 -- | @step@ attribute
-step :: Attrs a => a
-step = attr "step"
+step :: Attr
+step = ident "step"
+
 
 -- | @style@ attribute
-style :: Attrs a => a
-style = attr "style"
+style :: Attr
+style = ident "style"
+
 
 -- | @subject@ attribute
-subject :: Attrs a => a
-subject = attr "subject"
+subject :: Attr
+subject = ident "subject"
+
 
 -- | @summary@ attribute
-summary :: Attrs a => a
-summary = attr "summary"
+summary :: Attr
+summary = ident "summary"
+
 
 -- | @tabindex@ attribute
-tabindex :: Attrs a => a
-tabindex = attr "tabindex"
+tabindex :: Attr
+tabindex = ident "tabindex"
+
 
 -- | @target@ attribute
-target :: Attrs a => a
-target = attr "target"
+target :: Attr
+target = ident "target"
+
 
 -- | @title@ attribute
-title :: Attrs a => a
-title = attr "title"
+title :: Attr
+title = ident "title"
 
--- | @type@ attribute
-type' :: Attrs a => a
-type' = attr "type"
+
+-- | @type'@ attribute
+type' :: Attr
+type' = ident "type"
+
 
 -- | @usemap@ attribute
-usemap :: Attrs a => a
-usemap = attr "usemap"
+usemap :: Attr
+usemap = ident "usemap"
+
 
 -- | @valign@ attribute
-valign :: Attrs a => a
-valign = attr "valign"
+valign :: Attr
+valign = ident "valign"
+
 
 -- | @value@ attribute
-value :: Attrs a => a
-value = attr "value"
+value :: Attr
+value = ident "value"
+
 
 -- | @valuetype@ attribute
-valuetype :: Attrs a => a
-valuetype = attr "valuetype"
+valuetype :: Attr
+valuetype = ident "valuetype"
+
 
 -- | @vspace@ attribute
-vspace :: Attrs a => a
-vspace = attr "vspace"
+vspace :: Attr
+vspace = ident "vspace"
+
 
 -- | @width@ attribute
-width :: Attrs a => a
-width = attr "width"
+width :: Attr
+width = ident "width"
+
 
 -- | @wrap@ attribute
-wrap :: Attrs a => a
-wrap = attr "wrap"
+wrap :: Attr
+wrap = ident "wrap"
+
 
 -- | @xmlns@ attribute
-xmlns :: Attrs a => a
-xmlns = attr "xmlns"
+xmlns :: Attr
+xmlns = ident "xmlns"

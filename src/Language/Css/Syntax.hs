@@ -1,5 +1,7 @@
 
 -- | Css2.1 syntax
+-- 
+-- Css3:  selectors, namespaces, colors, keyframes
 --
 -- haskell translation of css 2.1 grammar. 
 --
@@ -11,7 +13,7 @@ module Language.Css.Syntax (
         -- * AtRule
         AtCharSet(..), 
         AtImport(..), ImportHead(..),
-        AtNamespace(..), NamespacePrefix,
+        AtNamespace(..), 
         AtMedia(..), 
         AtPage(..), PseudoPage,
         AtFontFace(..),
@@ -21,8 +23,10 @@ module Language.Css.Syntax (
         RuleSet(..), Decl(..), Prop, Prio(..), Expr(..),
         
         -- * Selectors
-        Sel(..), SimpleSel(..), SubSel(..),
-        Element, Attr(..), Class, Id, AttrIdent, AttrVal, PseudoVal(..),
+        GroupSel, Sel(..), SelComb(..), SimpleSel(..), 
+        NamespacePrefix(..), PseudoType(..),  
+        Attr(..), AttrRhs(..), AttrComb(..), AttrVal(..),
+        Element, Class, Id, PseudoVal(..),
 
         -- * Values
         Value(..), 
@@ -47,8 +51,8 @@ module Language.Css.Syntax (
         Percentage(..),
         Ms(..),
         S(..),
-        Uri(..)
-
+        Uri(..),
+        Nth(..)
     ) where
 
 
@@ -86,11 +90,8 @@ data ImportHead = IStr String | IUri Uri
                   deriving (Eq, Show)
 
 -- | \@namespace
-data AtNamespace = AtNamespace (Maybe NamespacePrefix) ImportHead 
+data AtNamespace = AtNamespace (Maybe Ident) ImportHead 
                   deriving (Eq, Show)
-
-type NamespacePrefix = Ident
-
 
 -- | \@media
 data AtMedia = AtMedia [Ident] [RuleSet]
@@ -121,7 +122,7 @@ data FrameTime = From | To | FrameAt Pt
 ---------------------------------------------------------
 -- Rules
 
-data RuleSet = RuleSet [Sel] [Decl]
+data RuleSet = RuleSet GroupSel [Decl]
                   deriving (Eq, Show)
 
 -- | Declaration
@@ -137,39 +138,66 @@ data Prio = Important
 ---------------------------------------------------------
 -- Selectors
 
+type GroupSel = [Sel]
+
 -- | Selector
-data Sel = SSel SimpleSel    -- ^ single selector	 
-	 | DescendSel Sel Sel    -- ^ ' '
-	 | ChildSel   Sel Sel    -- ^ \'>\'
-	 | AdjSel     Sel Sel    -- ^ \'+\'
-                  deriving (Eq, Show)
+data Sel = SSel [SimpleSel]         -- ^ simple selector	 
+         | CSel SelComb Sel Sel     -- ^ combination of selectors
+            deriving (Eq, Show)
 
--- | Simple selector
-data SimpleSel = UnivSel [SubSel]           -- ^ Universal selector
-    	       | TypeSel Element [SubSel]   -- ^ Type selector
-                  deriving (Eq, Show)
+data SelComb 
+    = Descend       -- ^ ' '
+    | Child         -- ^ \'>\'
+    | Adjacent      -- ^ \'+\'
+    | Sibling       -- ^ '~'
+    deriving (Eq, Show)
 
 
-data SubSel = AttrSel Attr        -- ^ attribute selector
-	    | ClassSel Class          -- ^ \'.\'
-	    | IdSel Id                -- ^ \'#\'
-	    | PseudoSel PseudoVal     -- ^ pseudo classes/elements
-                  deriving (Eq, Show)
+data SimpleSel 
+    = UniversalSel (Maybe NamespacePrefix)        -- ^ universal selector
+    | TypeSel (Maybe NamespacePrefix) Element     -- ^ type selector
+    | AttributeSel Attr                           -- ^ attribute selector
+    | ClassSel Class                              -- ^ class selector
+    | IdSel Id                                    -- ^ id selector
+    | PseudoSel PseudoType PseudoVal              -- ^ pseudo /class/element
+    | NegationSel SimpleSel                       -- ^ negation selector
+    deriving (Eq, Show)
+
+data PseudoType = OneColon | TwoColons
+    deriving (Eq, Show)
+
+data NamespacePrefix 
+    = AnyNamespace          -- ^ '*|Element'
+    | BlankNamespace        -- ^ ' |Element'
+    | JustNamespace Ident   -- ^ 'foo|Element'
+    deriving (Eq, Show)
 
 -- | attribute selector
-data Attr = Attr AttrIdent                
-          | AttrIs AttrIdent AttrVal      -- ^ \'=\'
-          | AttrIncl AttrIdent AttrVal    -- ^ \'~=\'
-          | AttrBegins AttrIdent AttrVal  -- ^ \'|=\'
+data Attr = Attr 
+    { attrNamespace :: Maybe NamespacePrefix
+    , attrIdent     :: Ident 
+    , attrRhs       :: Maybe AttrRhs
+    } deriving (Eq, Show)
+
+data AttrRhs = AttrRhs AttrComb AttrVal
+    deriving (Eq, Show)
+
+data AttrComb   = PrefixMatch       -- ^ \'^=\'      
+                | SuffixMatch       -- ^ \'$=\'
+                | SubstringMatch    -- ^ \'*=\'
+                | EqualsMatch       -- ^ \'=\'
+                | Includes          -- ^ \'~=\'          
+                | DashMatch         -- ^ \'|=\'
+                  deriving (Eq, Show)
+
+data AttrVal    = AttrValIdent Ident 
+                | AttrValString String
                   deriving (Eq, Show)
 
 type Element = String
 type Class = String
 type Id = String
 	
-type AttrIdent = String
-type AttrVal = String
-
 data PseudoVal = PIdent Ident
                | PFunc Func
                   deriving (Eq, Show)
@@ -183,29 +211,30 @@ data Expr = EVal Value            -- ^ single value
           | SpaceSep Expr Expr    -- ^ space separated expressions
                   deriving (Eq, Show)
 
-data Value = VDeg Deg | 
-             VRad Rad | 
-             VGrad Grad | 
-             VColor Color | 
-             VHz Hz | 
-             VKHz KHz | 
-             VFunc Func | 
-             VIdent Ident | 
-             VInt Int | 
-             VEm Em | 
-             VEx Ex | 
-             VPx Px | 
-             VIn In | 
-             VCm Cm | 
-             VMm Mm | 
-             VPc Pc | 
-             VPt Pt | 
-             VDouble Double | 
-             VPercentage Percentage | 
-             VString String | 
-             VMs Ms | 
-             VS S | 
-             VUri Uri
+data Value  = VDeg Deg 
+            | VRad Rad 
+            | VGrad Grad 
+            | VColor Color 
+            | VHz Hz 
+            | VKHz KHz 
+            | VFunc Func 
+            | VIdent Ident 
+            | VInt Int 
+            | VEm Em 
+            | VEx Ex 
+            | VPx Px 
+            | VIn In 
+            | VCm Cm 
+            | VMm Mm 
+            | VPc Pc 
+            | VPt Pt 
+            | VDouble Double 
+            | VPercentage Percentage 
+            | VString String 
+            | VMs Ms 
+            | VS S 
+            | VUri Uri 
+            | VNth Nth
         deriving (Eq, Show)
 
 -- | Function is identifier and the list of arguments
@@ -294,4 +323,12 @@ data S = S Double
 
 -- | \<uri\>
 data Uri = Uri String
+        deriving (Eq, Show)
+
+
+-- | 'a*n+b' values
+data Nth    = N Int Int     -- ^ 'a*n+b'
+            | Nth Int       -- ^ 'n'
+            | Odd
+            | Even
         deriving (Eq, Show)

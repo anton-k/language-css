@@ -123,40 +123,64 @@ instance Pretty Prio where
 -- Selectors
 
 instance Pretty Sel where
-	pretty x = case x of
-		    SSel x -> pretty x
-		    DescendSel x xs -> pretty x <+> space <+> pretty xs
-		    ChildSel   x xs -> pretty x <+> char '>' <+> pretty xs
-		    AdjSel     x xs -> pretty x <+> char '+' <+> pretty xs
+    pretty x = case x of
+        SSel xs         -> hcat $ map pretty xs
+        CSel comb a b   -> pretty a <+> pretty comb <+> pretty b
+
+instance Pretty SelComb where
+    pretty x = case x of
+            Descend     -> space
+            Child       -> char '>'
+            Adjacent    -> char '+'
+            Sibling     -> char '~'
 
 instance Pretty SimpleSel where
-	pretty x = case x of 
-		     UnivSel    xs -> char '*' <> prettySubs xs
-		     TypeSel el xs -> text el <> prettySubs xs
+    pretty x = case x of 
+        UniversalSel nsp    -> ppMaybe nsp <> char '*' 
+        TypeSel nsp el      -> ppMaybe nsp <> text el
+        AttributeSel attr   -> pretty attr
+        ClassSel a          -> char '.' <> text a
+        IdSel a             -> char '#' <> text a
+        PseudoSel t val     -> pretty t <> pretty val
+        NegationSel a       -> text ":not" <> parens (pretty a)
 
-prettySubs :: [SubSel] -> Doc
-prettySubs = hcat . map pretty
+
+instance Pretty NamespacePrefix where
+    pretty x = case x of
+        AnyNamespace    -> text "*|"
+        BlankNamespace  -> text " |"
+        JustNamespace a -> pretty a <> char '|'
+
+instance Pretty PseudoType where
+    pretty x = case x of
+        OneColon    -> colon
+        TwoColons   -> colon <> colon
 
 instance Pretty PseudoVal where
     pretty x = case x of 
                 PIdent a -> pretty a
                 PFunc  a -> pretty a
 
-instance Pretty SubSel where
-	pretty x = case x of
-		    AttrSel a         -> brackets $ pretty a
-		    ClassSel v        -> char '.' <> text v
-		    IdSel v           -> char '#' <> text v
-		    PseudoSel v       -> char ':' <> pretty v
-
 instance Pretty Attr where
+    pretty (Attr nsp name rhs) = brackets $ 
+        ppMaybe nsp <> pretty name <> ppMaybe rhs
+
+instance Pretty AttrRhs where
+    pretty (AttrRhs comb val) = pretty comb <> pretty val
+
+instance Pretty AttrComb where
     pretty x = case x of
-		    Attr a         -> text a
-		    AttrIs a v     -> text a <> equals <> (doubleQuotes $ text v)
-		    AttrIncl a v   -> text a <> text "~=" <> (doubleQuotes $ text v)
-		    AttrBegins a v -> text a <> text "|=" <> (doubleQuotes $ text v)
-	
--- Value
+        PrefixMatch         -> text "^="
+        SuffixMatch         -> text "$="
+        SubstringMatch      -> text "*="
+        EqualsMatch         -> char '='
+        Includes            -> text "~="
+        DashMatch           -> text "|="
+
+instance Pretty AttrVal where
+    pretty x = case x of
+        AttrValIdent a  -> pretty a
+        AttrValString a -> doubleQuotes $ text a
 
 instance Pretty Value where
     pretty x = case x of
@@ -183,6 +207,7 @@ instance Pretty Value where
         VMs a -> pretty a
         VS a -> pretty a
         VUri a -> pretty a
+        VNth a -> pretty a
 
 -- Values
 
@@ -273,7 +298,9 @@ instance Pretty Uri where
     pretty (Uri x) = text "url" <> (parens $ text x)
 
 
-
-
-
-
+instance Pretty Nth where
+    pretty x = case x of
+        N a b   -> int a <> text "*n+" <> int b
+        Nth a   -> int a
+        Odd     -> text "odd"
+        Even    -> text "even"

@@ -12,22 +12,23 @@
 -- >
 -- >res = ruleSets [
 -- >         body [
--- >             margin <:> int 0,
--- >             border <:> int 0 ],
+-- >             margin =: int 0,
+-- >             border =: int 0 ],
 -- >            
--- >         h1 [ textAlign <:> center],
+-- >         h1 [ textAlign =: center],
 -- >
 -- >         p [ 
--- >            backgroundColor <:> black, 
--- >            color <:> white,
--- >            padding <:> spaces [pct 5, pct 5, pct 10, pct 10]  ],
+-- >            backgroundColor =: black, 
+-- >            color =: white,
+-- >            padding =: spaces [pct 5, pct 5, pct 10, pct 10]  ],
 -- >
--- >         (star /. "warning") [ color <:> red ] 
+-- >         (star /. "warning") [ color =: red ] 
 -- >       ]
 -- > 
 -- >main = print $ pretty res
 -- >
 --
+
 module Language.Css.Build (
        -- * Classes
        Idents(..), ToExpr(..),
@@ -43,11 +44,15 @@ module Language.Css.Build (
 
        -- ** Selectors
        Sel', star, sels, 
-       (/>), (/-), (/#), (/.), (/:),
-       Attrs(..), (!), (.=), (~=), (|=),
-       
+       (/>), (/-), (/#), (/.), (/:), (/::), (/~), 
+       (!), (^=), ($=), (*=), (.=), (~=), (|=),
+
+       -- ** Namespace prefix           
+        SetNamespacePrefix(..), 
+        anyNamespace, blankNamespace, justNamespace,
+
        -- ** Declarations
-       (<:>), important, 
+       (=:), (<:>), important, 
        space, slash, comma,
        spaces, slashes, commas,
 
@@ -62,8 +67,7 @@ module Language.Css.Build (
        aqua, black, blue, fuchsia, gray, green, 
        lime, maroon, navy, olive, orange, purple, 
        red, silver, teal, white, yellow
-)
-where
+) where
 
 import Language.Css.Syntax
 
@@ -152,8 +156,8 @@ at = Frame . FrameAt
 -----------------------------------------------------------------
 -- Selectors
 
-infixl 5 /-, />, /+
-infixl 6 /#, /., !, /:
+infixl 5 /-, />, /+, /~
+infixl 6 /#, /., !, /:, /::
 
 infixr 0 <:>
 
@@ -163,10 +167,10 @@ type Sel' = [Decl] -> RuleSet
 
 -- | @*@ selector
 star :: Sel'
-star = RuleSet (return $ SSel $ UnivSel [])
+star = RuleSet $ return $ SSel [UniversalSel Nothing]
 
 instance Idents Sel' where
-    ident x = RuleSet (return $ SSel $ TypeSel x [])
+    ident x = RuleSet $ return $ SSel [TypeSel Nothing x]
 
 -- compose
 
@@ -182,19 +186,27 @@ sels xs d = joinRules [] $ map ($ d) xs
 --
 -- space in css
 (/-) :: Sel' -> Sel' -> Sel'
-(/-) = liftSel2 DescendSel
+(/-) = liftSel2 $ CSel Descend
 
 -- | Child
 --
 -- @>@ in css
 (/>) :: Sel' -> Sel' -> Sel'
-(/>) = liftSel2 ChildSel
+(/>) = liftSel2 $ CSel Child
 
--- | Sibling
+-- | Adjacent sibling
 --
 -- @+@ in css
 (/+) :: Sel' -> Sel' -> Sel'
-(/+) = liftSel2 AdjSel
+(/+) = liftSel2 $ CSel Adjacent
+
+
+-- | General sibling
+--
+-- @~@ in css
+(/~) :: Sel' -> Sel' -> Sel'
+(/~) = liftSel2 $ CSel Sibling
+
 
 -- set attribs
 
@@ -208,11 +220,18 @@ sels xs d = joinRules [] $ map ($ d) xs
 
 -- | set attributes
 (!) :: Sel' -> Attr -> Sel'
-(!) s attr = liftSel1 (appendSubSel $ AttrSel attr) s 
+(!) s attr = liftSel1 (appendSubSel $ AttributeSel attr) s 
 
--- | set pseudo classes/elements
+-- | set pseudo classes/elements (one colon)
 (/:) :: Sel' -> PseudoVal -> Sel' 
-(/:) s p = liftSel1 (appendSubSel $ PseudoSel p) s
+(/:) = setPseudo OneColon
+
+-- | set pseudo elements (two colons)
+(/::) :: Sel' -> PseudoVal -> Sel'
+(/::) = setPseudo TwoColons
+
+setPseudo :: PseudoType -> Sel' -> PseudoVal -> Sel'
+setPseudo pType s p = liftSel1 (appendSubSel $ PseudoSel pType p) s
 
 liftSel1 :: (Sel -> Sel) -> (Sel' -> Sel')
 liftSel1 f = liftA f'
@@ -224,41 +243,42 @@ liftSel2 f = liftA2 f'
 
 
 instance Idents Attr where
-    ident = Attr
+    ident x = Attr Nothing (ident x) Nothing 
 
--- | attribute selector
-class Attrs a where
-    attr :: String -> a
+instance Idents AttrVal where
+    ident = AttrValIdent . ident
 
-instance Attrs Attr where
-    attr = Attr
 
-instance Attrs AttrIdent where
-    attr = id
+-- | element's attribute is prefix of
+(^=) :: Attr -> AttrVal -> Attr
+(^=) = setAttr PrefixMatch
 
--- | element's attribute is
-(.=) :: AttrIdent -> AttrVal -> Attr
-(.=) = AttrIs 
+-- | element's attribute is suffix of
+($=) :: Attr -> AttrVal -> Attr
+($=) = setAttr SuffixMatch
+
+-- | element's attribute is substring of
+(*=) :: Attr -> AttrVal -> Attr
+(*=) = setAttr SubstringMatch
+
+-- | element's attribute equals
+(.=) :: Attr -> AttrVal -> Attr
+(.=) = setAttr EqualsMatch
 
 -- | element's attribute includes
-(~=) :: AttrIdent -> AttrVal -> Attr
-(~=) = AttrIncl
+(~=) :: Attr -> AttrVal -> Attr
+(~=) = setAttr Includes
 
 -- | element's attribute begins with
-(|=) :: AttrIdent -> AttrVal -> Attr
-(|=) = AttrBegins
+(|=) :: Attr -> AttrVal -> Attr
+(|=) = setAttr DashMatch
 
 
-appendSubSel :: SubSel -> Sel -> Sel
-appendSubSel s a = 
-    case a of
-        SSel x      -> case x of
-                            UnivSel xs    -> SSel $ UnivSel $ xs ++ [s]
-                            TypeSel el xs -> SSel $ TypeSel el $ xs ++ [s]
-        DescendSel x y -> DescendSel (appendSubSel s x) (appendSubSel s y)
-        ChildSel   x y -> ChildSel   (appendSubSel s x) (appendSubSel s y)
-        AdjSel     x y -> AdjSel     (appendSubSel s x) (appendSubSel s y)                
-
+appendSubSel :: SimpleSel -> Sel -> Sel
+appendSubSel s a = case a of
+    SSel xs     -> SSel $ xs ++ [s]     
+    CSel op a b -> CSel op (appendSubSel s a) (appendSubSel s b)
+        
 
 getSels :: RuleSet -> [Sel] 
 getSels (RuleSet xs _) = xs
@@ -266,13 +286,65 @@ getSels (RuleSet xs _) = xs
 getDecls :: RuleSet -> [Decl]
 getDecls (RuleSet _ xs) = xs
 
+setAttr :: AttrComb -> Attr -> AttrVal -> Attr
+setAttr op a b = a{ attrRhs = Just $ AttrRhs op b } 
 
 instance Idents PseudoVal where
     ident = PIdent . ident
 
+-- namespace prefixes
+
+class SetNamespacePrefix a where
+    setNamespacePrefix :: NamespacePrefix -> a -> a
+
+anyNamespace :: SetNamespacePrefix a => a -> a
+anyNamespace = setNamespacePrefix AnyNamespace
+
+blankNamespace :: SetNamespacePrefix a => a -> a
+blankNamespace = setNamespacePrefix BlankNamespace
+
+justNamespace :: SetNamespacePrefix a => String -> a -> a
+justNamespace = setNamespacePrefix . JustNamespace . ident 
+
+
+instance SetNamespacePrefix Sel' where
+    setNamespacePrefix prefix = liftSel1 (setNamespacePrefix prefix)
+
+instance SetNamespacePrefix SimpleSel where
+    setNamespacePrefix prefix x = case x of
+        UniversalSel _      -> UniversalSel (Just prefix)
+        TypeSel _ elem      -> TypeSel (Just prefix) elem
+        _                   -> x
+
+instance SetNamespacePrefix Sel where
+    setNamespacePrefix prefix x = case x of
+        SSel as     -> SSel $ case as of
+                        []      -> []
+                        a:rest  -> phi a : rest
+        CSel op a b -> CSel op (phi a) (phi b) 
+        where phi :: SetNamespacePrefix a => a -> a
+              phi = setNamespacePrefix prefix  
+
+
+instance SetNamespacePrefix Attr where
+    setNamespacePrefix prefix a = a{ attrNamespace = Just prefix }
+
+
+
+
+
+
+
+
 -----------------------------------------------------------------
 -- Declarations
 
+-- | declaration constructor
+(=:) :: String -> Expr -> Decl
+(=:) a b = Decl Nothing (ident a) b
+
+
+{-# DEPRECATED (<:>) "Use (=:) instead" #-}
 -- | declaration constructor
 (<:>) :: String -> Expr -> Decl
 (<:>) a b = Decl Nothing (ident a) b
@@ -531,6 +603,9 @@ instance ToExpr S where
 instance ToExpr Uri where
     expr = expr . VUri
 
+instance ToExpr Nth where
+    expr = expr . VNth
+
 -- colors
 --
 aqua    = cword "#00ffff" 
@@ -550,5 +625,6 @@ silver  = cword "#c0c0c0"
 teal    = cword "#008080" 
 white   = cword "#ffffff" 
 yellow  = cword "#ffff00"
+
 
 
