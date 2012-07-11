@@ -12,6 +12,11 @@ Build-Type:    Simple
 Category:      Language
 Maintainer:    <anton.kholomiov@gmail.com>
 
+Extra-Source-Files : 
+        gen/genAttributes.hs
+        gen/Attributes
+        examples/Simple.hs
+
 Library
   Build-Depends:
         base >= 4, base < 5, pretty  
@@ -25,14 +30,6 @@ Library
         Language.Css.Build.Attributes
         Language.Css.Build.Pseudos
 
-
-Extra-Source-Files : 
-        gen/genAttributes.hs
-        gen/Attributes
-        examples/Simple.hs
-
----------------------------------------------------------------------------------- 		
-  Other-Modules:
 
 
 

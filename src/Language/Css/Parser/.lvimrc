@@ -1,0 +1,2 @@
+map  <F6>       :wa<cr> :! alex LexerDimension.x<cr> :! alex Lexer.x<cr> :!runhaskell Main.hs<cr>
+imap <F6> <Esc> :wa<cr> :! alex LexerDimension.x<cr> :! alex Lexer.x<cr> :!runhaskell Main.hs<cr>
