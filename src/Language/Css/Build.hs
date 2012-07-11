@@ -34,8 +34,7 @@ module Language.Css.Build (
        Idents(..), ToExpr(..),
 
        -- * StyleSheet
-       styleSheet, rules, ruleSets, 
-       addImports, addNamespaces, addRules, charset,
+       rules, addRules, charset,
 
        -- * AtRules
        media, page, fontFace, keyframes, at,
@@ -77,7 +76,7 @@ class Idents a where
     ident :: String -> a
 
 instance Idents Ident where
-    ident = Ident
+    ident = Ident Nothing
 
 instance Idents String where
     ident = id
@@ -91,61 +90,51 @@ instance ToExpr Expr where
 -----------------------------------------------------------------
 -- StyleSheet
 
-styleSheet :: Maybe AtCharSet -> [AtImport] -> [AtNamespace] 
-    -> [StyleBody] -> StyleSheet
-styleSheet = StyleSheet
-
 -- | construct 'StyleSheet' from list of 'AtRule' 's or 'RuleSet' 's
-rules :: [StyleBody] -> StyleSheet
-rules = styleSheet Nothing [] []
-
--- | append imports
-addImports :: [AtImport] -> StyleSheet -> StyleSheet
-addImports is' (StyleSheet c is ns body) = StyleSheet c (is ++ is') ns body
-
--- | append namespaces
-addNamespaces :: [AtNamespace] -> StyleSheet -> StyleSheet
-addNamespaces ns' (StyleSheet c is ns body) = StyleSheet c is (ns ++ ns') body
+rules :: [Rule] -> StyleSheet
+rules = StyleSheet 
 
 -- | append rules
-addRules :: [StyleBody] -> StyleSheet -> StyleSheet
-addRules rs (StyleSheet c is ns body) = StyleSheet c is ns $ rs ++ body
+addRules :: [Rule] -> StyleSheet -> StyleSheet
+addRules rs (StyleSheet body) = StyleSheet $ rs ++ body
 
 -- | construct 'StyleSheet' from list of 'RuleSet' 's
 ruleSets :: [RuleSet] -> StyleSheet
-ruleSets = StyleSheet Nothing [] [] . map SRuleSet
+ruleSets = StyleSheet . map SRuleSet
 
 -- | set \@charset
 charset :: String -> StyleSheet -> StyleSheet
-charset str (StyleSheet _ is ns body) = 
-    StyleSheet (Just $ AtCharSet str) is ns body
+charset str (StyleSheet body) = 
+    StyleSheet $ (SAtRule Nothing $ AtCharSet str) : body
 
 -----------------------------------------------------------------
 -- AtRules
 
+atRule = SAtRule Nothing
+
 -- | \@media
-media :: [String] -> [RuleSet] -> StyleBody
-media ms rs = SAtMedia $ AtMedia (map ident ms) rs
+media :: [String] -> [RuleSet] -> Rule
+media ms rs = atRule $ AtMedia (map ident ms) rs
 
 -- | \@page
-page ::  Maybe String -> Maybe PseudoPage -> [Decl] -> StyleBody
-page i p ds = SAtPage $ AtPage (ident <$> i) p ds
+page ::  Maybe String -> Maybe PseudoPage -> [Decl] -> Rule
+page i p ds = atRule $ AtPage (ident <$> i) p ds
 
 -- | import from string
-importStr :: String -> [Ident] -> AtImport
-importStr str = AtImport (IStr str)
+importStr :: String -> [Ident] -> Rule
+importStr str = atRule . AtImport (IStr str)
 
 -- | import from uri
-importUri :: String -> [Ident] -> AtImport
-importUri str = AtImport (IUri $ Uri str)
+importUri :: String -> [Ident] -> Rule
+importUri str = atRule . AtImport (IUri $ Uri str)
 
 -- | \@font-face
-fontFace :: [Decl] -> StyleBody
-fontFace = SAtFontFace . AtFontFace
+fontFace :: [Decl] -> Rule
+fontFace = atRule . AtFontFace
 
 -- | \@keyframes
-keyframes :: Ident -> [Frame] -> StyleBody 
-keyframes name frames = SAtKeyframes $ AtKeyframes name frames
+keyframes :: Ident -> [Frame] -> Rule
+keyframes name frames = atRule $ AtKeyframes name frames
 
 at :: Pt -> [Decl] -> Frame
 at = Frame . FrameAt

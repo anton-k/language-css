@@ -30,30 +30,30 @@ ppBody as = curly (nest 4 $ vcat $ punctuate semi $ map pretty as)
 -- StyleSheet
 
 instance Pretty StyleSheet where
-    pretty (StyleSheet ch imp nmsp body) = 
-               ppMaybe ch 
-            $$ (vsep $ map pretty imp)
-            $$ (vsep $ map pretty nmsp)
-            $$ (vsep $ map pretty body)
+    pretty (StyleSheet as) = vsep $ map pretty as
 
-instance Pretty StyleBody where
+instance Pretty Rule where
     pretty x = case x of
                 SRuleSet    x -> pretty x
-                SAtMedia    x -> pretty x
-                SAtPage     x -> pretty x
-                SAtFontFace x -> pretty x
+                SAtRule vp  x -> char '@' <> ppMaybe vp <> pretty x
 
 -- AtRules
 
+instance Pretty AtRule where
+    pretty x = case x of
+        AtCharSet str               -> ppAtCharSet str
+        AtImport head ms            -> ppAtImport head ms
+        AtNamespace nspImp impHead  -> ppAtNamespace nspImp impHead
+        AtPage id pp ds             -> ppAtPage id pp ds
+        AtFontFace ds               -> ppAtFontFace ds
+        AtKeyframes names frames    -> ppAtKeyframes names frames
+
 -- @charset
-instance Pretty AtCharSet where
-    pretty (AtCharSet str) = text "@charset " <> text str <+> semi
+ppAtCharSet str = text "charset " <> text str <+> semi
 
 -- @import
-instance Pretty AtImport where
-    pretty (AtImport head ms) =
-        text "@import" <+> pretty head <+>
-        punctuatePretties comma ms <+> semi
+ppAtImport head ms = text "import" <+> pretty head 
+    <+> punctuatePretties comma ms <+> semi
 
 instance Pretty ImportHead where
     pretty x = case x of
@@ -61,36 +61,26 @@ instance Pretty ImportHead where
                 IUri x -> pretty x
 
 -- @namespace
-instance Pretty AtNamespace where
-    pretty (AtNamespace namespaceImp impHead) = 
-        text "@namespace" <+> ppMaybe namespaceImp <+> pretty impHead
-
+ppAtNamespace namespaceImp impHead = 
+    text "namespace" <+> ppMaybe namespaceImp <+> pretty impHead
 
 -- @page
-instance Pretty AtPage where
-    pretty (AtPage id pp ds) = text "@page" 
-        <+> ppMaybe id <+> ppMaybe pp 
-        <+> (braces $ punctuatePretties semi ds)
-
+ppAtPage id pp ds = text "page" 
+    <+> ppMaybe id <+> ppMaybe pp 
+    <+> (braces $ punctuatePretties semi ds)
 
 -- @media
-instance Pretty AtMedia where
-    pretty (AtMedia ms rs) = text "@media" 
-        <+> punctuatePretties comma ms
-        <+> punctuatePretties comma rs
+ppAtMedia ms rs = text "media" 
+    <+> punctuatePretties comma ms
+    <+> punctuatePretties comma rs
         
-
 -- @font-face
-instance Pretty AtFontFace where
-    pretty (AtFontFace ds) = text "@font-face" 
-        <+> (braces $ punctuatePretties semi ds)
-
+ppAtFontFace ds = text "font-face" 
+    <+> (braces $ punctuatePretties semi ds)
 
 -- @keyframes 
-instance Pretty AtKeyframes where
-    pretty (AtKeyframes name frames) 
-        =   text "@keyframes" <+> pretty name
-        <+> ppBody frames 
+ppAtKeyframes name frames = text "keyframes" 
+    <+> pretty name <+> ppBody frames 
 
 instance Pretty Frame where 
     pretty (Frame time body) = pretty time <+> ppBody body
@@ -224,7 +214,7 @@ instance Pretty Func where
 
 
 instance Pretty Ident where
-	pretty (Ident a) = text a
+	pretty (Ident vp a) = ppMaybe vp <> text a
 
 
 -- Value elems
@@ -304,3 +294,28 @@ instance Pretty Nth where
         Nth a   -> int a
         Odd     -> text "odd"
         Even    -> text "even"
+
+
+-- Vendor prefixes
+
+instance Pretty VendorPrefix where
+    pretty x = text $ case x of
+        Ms'     -> "-ms-"
+        Mso'    -> "-mso-"
+        Moz'    -> "-moz-" 
+        O'      -> "-o-"
+        Xv'     -> "-xv-"
+        Atsc'   -> "-atsc-" 
+        Wap'    -> "-wap-"
+        Khtml'  -> "-khtml-"
+        Webkit' -> "-webkit-" 
+        Prince' -> "-prince-"
+        Ah'     -> "-ah-"
+        Hp'     -> "-hp-"
+        Ro'     -> "-ro-" 
+        Rim'    -> "-rim-"
+        Tc'     -> "-tc-"
+        VendorMinus a -> '-' : (a ++ "-")
+        VendorUnder a -> '_' : (a ++ "-")
+
+

@@ -8,16 +8,11 @@
 -- See <http://www.w3.org/TR/CSS2/grammar.html> and <http://www.w3.org/TR/CSS2/syndata.html>
 module Language.Css.Syntax (
         -- * Stylesheet
-        StyleSheet(..), StyleBody(..),
+        StyleSheet(..), Rule(..),
 
         -- * AtRule
-        AtCharSet(..), 
-        AtImport(..), ImportHead(..),
-        AtNamespace(..), 
-        AtMedia(..), 
-        AtPage(..), PseudoPage,
-        AtFontFace(..),
-        AtKeyframes(..), Frame(..), FrameTime(..),
+        AtRule(..),
+        ImportHead(..), PseudoPage, Frame(..), FrameTime(..),
         
         -- * RuleSet
         RuleSet(..), Decl(..), Prop, Prio(..), Expr(..),
@@ -32,7 +27,7 @@ module Language.Css.Syntax (
         Value(..), 
        
         -- * Primitives
-        Ident(..), Func(..), 
+        Ident(..), VendorPrefix(..), Func(..), 
                 
         Deg(..), 
         Rad(..),
@@ -58,58 +53,46 @@ module Language.Css.Syntax (
 
 import Text.PrettyPrint
 
-data Ident = Ident String
+data Ident = Ident (Maybe VendorPrefix) String
                   deriving (Eq, Show)
+
+
+data VendorPrefix = 
+      Ms' | Mso' | Moz' | O' | Xv' | Atsc' | Wap' | Khtml' 
+    | Webkit' | Prince' | Ah' | Hp' | Ro' | Rim' | Tc' 
+    | VendorUnder String | VendorMinus String
+    deriving (Eq, Show)
+
 
 --------------------------------------------------------
 -- Stylesheet
 
-data StyleSheet = 
-    StyleSheet (Maybe AtCharSet) [AtImport] [AtNamespace] [StyleBody]
+newtype StyleSheet = StyleSheet [Rule]
     deriving (Eq, Show)
 
-data StyleBody = SRuleSet     RuleSet 
-               | SAtMedia     AtMedia 
-               | SAtPage      AtPage
-               | SAtFontFace  AtFontFace
-               | SAtKeyframes AtKeyframes
-                  deriving (Eq, Show)
+data Rule = SRuleSet     RuleSet 
+          | SAtRule (Maybe VendorPrefix) AtRule
+                deriving (Eq, Show)
 
 ---------------------------------------------------------
 -- AtRules
 
--- | \@charset
-data AtCharSet = AtCharSet String
-                  deriving (Eq, Show)
+data AtRule 
+        = AtCharSet String                      -- ^ \@charset
+        | AtImport ImportHead [Ident]           -- ^ \@import
 
--- | \@import
-data AtImport = AtImport ImportHead [Ident]
-                  deriving (Eq, Show)
+        | AtNamespace (Maybe Ident) ImportHead  -- ^ \@namespace
+        | AtMedia [Ident] [RuleSet]             -- ^ \@media
+        | AtPage (Maybe Ident) (Maybe PseudoPage) [Decl]
+                                                -- ^ \@page
+        | AtFontFace [Decl]                     -- ^ \@font-face
+        | AtKeyframes Ident [Frame]             -- ^ \@keyframes 
+        deriving (Eq, Show)  
 
-data ImportHead = IStr String | IUri Uri
-                  deriving (Eq, Show)
-
--- | \@namespace
-data AtNamespace = AtNamespace (Maybe Ident) ImportHead 
-                  deriving (Eq, Show)
-
--- | \@media
-data AtMedia = AtMedia [Ident] [RuleSet]
-                  deriving (Eq, Show)
-
--- | \@page
-data AtPage = AtPage (Maybe Ident) (Maybe PseudoPage) [Decl]
-                  deriving (Eq, Show)
+data ImportHead =  IStr String | IUri Uri
+                  deriving (Eq, Show)  
 
 type PseudoPage = Ident
-
--- | \@font-face
-data AtFontFace = AtFontFace [Decl]
-                  deriving (Eq, Show)
-
--- | \@keyframes 
-data AtKeyframes = AtKeyframes Ident [Frame]
-                  deriving (Eq, Show)  
 
 data Frame = Frame FrameTime [Decl]
                   deriving (Eq, Show)  
