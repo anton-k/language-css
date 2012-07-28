@@ -2,7 +2,7 @@ module Main where
 
 import Lexer
 
-main = return () --  mapM_ print . lexer =<< readFile "ocean.css"
+main = mapM_ print . lexer =<< readFile "test.css"
 
 test x = mapM_ print . lexer =<< readFile x
 

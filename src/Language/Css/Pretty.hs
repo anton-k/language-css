@@ -233,13 +233,15 @@ instance Pretty Color where
         Cword a    -> text a 
         Crgb r g b -> col "rgb" $ fmap VInt [r, g, b]
         Crgba r g b a -> col "rgba" $ [VInt r, VInt g, VInt b, VDouble a]
-        CrgbPt r g b -> col "rgb" $ fmap VPt [r, g, b]
-        CrgbaPt r g b a -> col "rgba" $ [VPt r, VPt g, VPt b, VDouble a]
+        CrgbPt r g b -> col "rgb" $ fmap VPercentage [r, g, b]
+        CrgbaPt r g b a -> col "rgba" $ 
+            [VPercentage r, VPercentage g, VPercentage b, VDouble a]
         
         Chsl r g b -> col "hsl" $ fmap VInt [r, g, b]
         Chsla r g b a -> col "hsla" $ [VInt r, VInt g, VInt b, VDouble a]
-        ChslPt r g b -> col "hsl" $ fmap VPt [r, g, b]
-        ChslaPt r g b a -> col "hsla" $ [VPt r, VPt g, VPt b, VDouble a]
+        ChslPt r g b -> col "hsl" $ fmap VPercentage [r, g, b]
+        ChslaPt r g b a -> col "hsla" $ 
+            [VPercentage r, VPercentage g, VPercentage b, VDouble a]
         where col :: String -> [Value] -> Doc
               col name vals = (text name <> ) $  parens $ hsep $
                         punctuate comma $ map pretty vals

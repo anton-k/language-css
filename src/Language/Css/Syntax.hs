@@ -1,5 +1,5 @@
 
--- | Css2.1 syntax
+-- | Css2.1 syntax and bits of Css 3
 -- 
 -- Css3:  selectors, namespaces, colors, keyframes
 --
@@ -240,16 +240,14 @@ data Grad = Grad Double
 data Color = Cword String 
 
            | Crgb Int Int Int
-           | CrgbPt Pt Pt Pt           
+           | CrgbPt Percentage Percentage Percentage           
            | Crgba Int Int Int Double
-           | CrgbaPt Pt Pt Pt Double
+           | CrgbaPt Percentage Percentage Percentage Double
            
            | Chsl Int Int Int
-           | ChslPt Pt Pt Pt
+           | ChslPt Percentage Percentage Percentage
            | Chsla Int Int Int Double
-           | ChslaPt Pt Pt Pt Double
-
-
+           | ChslaPt Percentage Percentage Percentage Double
         deriving (Eq, Show)
 
 -- | \<frequency\>

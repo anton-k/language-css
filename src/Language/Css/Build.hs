@@ -413,7 +413,7 @@ rgb :: Int -> Int -> Int -> Expr
 rgb x0 x1 x2 = expr $ Crgb x0 x1 x2
 
 -- | \<color\> 
-rgbPt :: Pt -> Pt -> Pt -> Expr
+rgbPt :: Percentage -> Percentage -> Percentage -> Expr
 rgbPt x0 x1 x2 = expr $ CrgbPt x0 x1 x2
 
 -- | \<color\> 
@@ -421,7 +421,7 @@ rgba :: Int -> Int -> Int -> Double -> Expr
 rgba x0 x1 x2 a = expr $ Crgba x0 x1 x2 a
 
 -- | \<color\> 
-rgbaPt :: Pt -> Pt -> Pt -> Double -> Expr
+rgbaPt :: Percentage -> Percentage -> Percentage -> Double -> Expr
 rgbaPt x0 x1 x2 a = expr $ CrgbaPt x0 x1 x2 a
 
 -- | \<color\>
@@ -429,7 +429,7 @@ hsl :: Int -> Int -> Int -> Expr
 hsl x0 x1 x2 = expr $ Chsl x0 x1 x2
 
 -- | \<color\> 
-hslPt :: Pt -> Pt -> Pt -> Expr
+hslPt :: Percentage -> Percentage -> Percentage -> Expr
 hslPt x0 x1 x2 = expr $ ChslPt x0 x1 x2
 
 -- | \<color\>
@@ -437,7 +437,7 @@ hsla :: Int -> Int -> Int -> Double -> Expr
 hsla x0 x1 x2 a = expr $ Chsla x0 x1 x2 a
 
 -- | \<color\> 
-hslaPt :: Pt -> Pt -> Pt -> Double -> Expr
+hslaPt :: Percentage -> Percentage -> Percentage -> Double -> Expr
 hslaPt x0 x1 x2 a = expr $ ChslaPt x0 x1 x2 a
 
 

@@ -3,16 +3,18 @@ module Lexer(Token(..), lexer) where
 
 import LexerUtils
 import LexerDimension
+
+import Token
 }
 
-%wrapper "basic"
+%wrapper "posn"
 
 $digit      = [0-9]
 $hexdig     = [0-9A-Fa-f]
 $nonascii   = []
 
 $char       = [0-9a-zA-Z\-_]
-$firstChar  = [_a-zA-Z] 
+$firstChar  = [a-zA-Z] 
 $sign       = [\+\-]
 
 @unicode    = \\ $hexdig{1,6} $white?
@@ -40,7 +42,8 @@ $butGt      = . # >
 
 @badComment = @badComm1 | @badComm2
 
-@ident      = \-? $firstChar @nmchar*
+@vendor     = [\-_] $firstChar* \-
+@ident      = $firstChar @nmchar*
 @name       = $char+
 
 
@@ -73,92 +76,71 @@ $l'         = [lL]
 token :-
 
     $white+             ;
-    @comment            { Comment }
-    @badComment         { BadComment }
-    @badString          { BadStringTok }
+    @comment            { con Comment }
+    @badComment         { con BadComment }
+    @badString          { con BadStringTok }
 
-    @ident              { Ident }
-    \@ @ident           { AtKeyword . tail }
+    @vendor             { con VendorPrefix }     
+    @ident              { con Ident }
 
-    \# @name            { Hash . tail }
+    "!important"        { tok Important }
 
-    @num                { Number . read }
-    @num \%             { Percentage . readNum . init }
-    @num @ident         { uncurry Dimension . readDim }
+    "@" @vendor @ident  { con $ (\(a, b) -> AtRule (Just a) b) . stripAtRule . tail } 
+    "@" @ident          { con $ AtRule Nothing . tail }
 
-    @string             { StringTok . stripQuotes }
+    \# @name            { con $ Hash . tail }
 
-    @urlName "(" @w @string @w ")"    { Uri . stripQuotes . stripUri }
-    @urlName "(" @w @url    @w ")"    { Uri . stripUri }
+    @num                { con $ Number . read }
+    @num \%             { con $ Percentage . readNum . init }
+    @num @ident         { con $ uncurry Dimension . readDim }
 
-    : 	                { const Colon }
-    \;                  { const SemiColon } 
-    \{                  { const OpenCurly }
-    \}                  { const CloseCurly }
-    \(                  { const OpenParen }
-    \)                  { const CloseParen }
-    \[                  { const OpenSquare }
-    \]                  { const CloseSquare }
-    \,                  { const Comma }
-    \/                  { const Slash }
-    \.                  { const Period }
-    !                   { const Bang }
+    @string             { con $ StringTok . stripQuotes }
 
-    @ident \(           { Function . init }
+    @urlName "(" @w @string @w ")"    { con $ Uri . stripQuotes . stripUri }
+    @urlName "(" @w @url    @w ")"    { con $ Uri . stripUri }
 
-    "~="                { const Includes }
-    "|="                { const DashMatch }    
-    "^="                { const PrefixMatch	}
-    "$="                { const SuffixMatch }
-    "*="                { const SubstringMatch }
-    "="                 { const EqualsMatch	}
-    "*"                 { const Mult }
-    "+"                 { const Plus }
-    "~"                 { const Tilde }
-    ">"                 { const Child }
+    : 	                { tok Colon }
+    \;                  { tok SemiColon } 
+    \{                  { tok OpenCurly }
+    \}                  { tok CloseCurly }
+    \(                  { tok OpenParen }
+    \)                  { tok CloseParen }
+    \[                  { tok OpenSquare }
+    \]                  { tok CloseSquare }
+    \,                  { tok Comma }
+    \/                  { tok Slash }
+    \.                  { tok Period }
+    !                   { tok Bang }
 
-    . # [\"\']          { Delim . head }
+    @ident \(           { con $ Function . init }
+
+    "~="                { tok Includes }
+    "|="                { tok DashMatch }    
+    "^="                { tok PrefixMatch	}
+    "$="                { tok SuffixMatch }
+    "*="                { tok SubstringMatch }
+    "="                 { tok EqualsMatch	}
+    "*"                 { tok Mult }
+    "+"                 { tok Plus }
+    "~"                 { tok Tilde }
+    ">"                 { tok Child }
+
+    . # [\"\']          { con $ Delim . head }
 
 {
-data Token 
-    = Ident String
-    | Comment String
-    | BadComment String
-    | AtKeyword String
-    | StringTok String
-    | BadStringTok String
-    | Hash String
-    | Number Double
-    | Percentage Double
-    | Dimension Double String
-    | Uri String
-    | UnicodeRange String
-    | Colon
-    | SemiColon
-    | Comma
-    | Slash
-    | Period
-    | Bang
-    | OpenParen
-    | CloseParen
-    | OpenCurly
-    | CloseCurly
-    | OpenSquare
-    | CloseSquare
-    | Function String 
-    | Includes
-    | DashMatch
-    | PrefixMatch
-    | SuffixMatch 
-    | SubstringMatch 
-    | EqualsMatch
-    | Mult 
-    | Plus 
-    | Tilde 
-    | Child 
-    | Delim Char
-    deriving (Show, Eq)      
+pos :: AlexPosn -> Pos
+pos (AlexPn _ l c) = (l,c)
 
-lexer :: String -> [Token]
+type TokenFun = AlexPosn -> String -> L Token
+
+-- primitive tokens
+tok :: Token -> TokenFun 
+tok t p _ = L (pos p) t 
+
+-- constructors
+con :: (String -> Token) -> TokenFun
+con f p s = L (pos p) (f s)
+
+lexer :: String -> [L Token]
 lexer = alexScanTokens
 }

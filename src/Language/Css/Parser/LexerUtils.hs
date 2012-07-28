@@ -1,5 +1,5 @@
 module LexerUtils(
-    readNum, stripQuotes, stripUri) where
+    readNum, stripQuotes, stripUri, stripAtRule) where
 
 readNum :: String -> Double
 readNum x = read $ case x of
@@ -14,4 +14,9 @@ stripQuotes = init . tail
 
 stripUri :: String -> String 
 stripUri = init . drop 4
+
+
+stripAtRule :: String -> (String, String)
+stripAtRule x = ((head x : a ++ "-"), tail b)
+    where (a, b) = span (/= '-') $ tail x
 
