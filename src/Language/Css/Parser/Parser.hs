@@ -1,6 +1,8 @@
+-- todo AtCharSet -> AtCharset
 module Parser where
 
 import Control.Applicative
+import Control.Monad
 
 import Data.Char(toLower)
 
@@ -19,16 +21,67 @@ type P = GenParser (L Token) ()
 
 lol = undefined
 
+-----------------------------------------------------
+-- top level
+
 styleSheet :: P StyleSheet
 styleSheet = StyleSheet <$> many rule
 
-
 rule :: P Rule
-rule =  SRuleSet <$> ruleSet 
-    <|> uncurry SAtRule <$> atRule 
+rule =  atRule 
+    <|> SRuleSet <$> ruleSet 
+
+------------------------------------------------------
+-- at rules
+
+atRule :: P Rule
+atRule = join $ cssToken $ \x -> case x of
+    T.AtRule vp name    -> Just $ SAtRule (parseVendor <$> vp) <$> parse name
+    _                   -> Nothing
+    where parse x = case map toLower x of
+            "charset"   -> charset
+            "import"    -> import'
+            "namespace" -> namespace
+            "media"     -> media
+            "page"      -> page
+            "font-face" -> fontFace
+            "keyframes" -> keyframes
+
+charset, import', namespace, media, 
+    page, fontFace, keyframes :: P AtRule
+
+charset = AtCharset <$> string <* semiColon           
+
+import' = AtImport <$> importHead <*> medias 
+    where medias = (ident `sepBy` comma) <* semiColon 
+    
+importHead =  IStr <$> string <|> IUri <$> uri
+
+namespace = AtNamespace <$> optionMaybe ident <*> importHead <* semiColon
+
+media = AtMedia <$> mediums <*> rules
+    where mediums = (ident `sepBy1` comma)
+          rules = braces $ many ruleSet   
+
+page = AtPage <$> optionMaybe (colon *> ident) <*> decls 
+
+fontFace = AtFontFace <$> decls
+
+keyframes = AtKeyframes <$> ident <*> frames
+    where frames = braces $ many frame
+          frame  = Frame <$> time <*> decls
+          time   = from <|> to <|> FrameAt <$> percent  
+                where from = From <$ identIs "from"
+                      to   = To   <$ identIs "to"  
+
+------------------------------------------------------
+-- rules
 
 ruleSet :: P RuleSet
 ruleSet = RuleSet <$> groupSel <*> decls
+
+prio :: P () 
+prio = tok T.Important
 
 groupSel :: P GroupSel
 groupSel = lol
@@ -43,17 +96,20 @@ decl =  try (onPrio <$> stmt <* prio)
           stmt = Decl Nothing <$> (ident <* colon) <*> expr  
 
 ident :: P Ident
-ident = try (vendorIdent <$> vendor <*> plainIdent)
-    <|> noVendorIdent <$> plainIdent
-    where vendorIdent = S.Ident . Just
-          noVendorIdent = S.Ident Nothing  
+ident = S.Ident <$> optionMaybe vendor <*> plainIdent
 
-        
+identIs :: String -> P ()
+identIs a = cssToken $ \x -> case x of
+    T.Ident b   -> if a == b then Just () else Nothing
+    _           -> Nothing
+
 vendor :: P VendorPrefix
 vendor = cssToken $ \x -> case x of
-    T.VendorPrefix str  -> Just (parse str)
+    T.VendorPrefix str  -> Just (parseVendor str)
     _                   -> Nothing
-    where parse x = case map toLower x of
+    
+parseVendor :: String -> VendorPrefix
+parseVendor x = case map toLower x of
             "-moz-"     -> Moz'
             "-webkit-"  -> Webkit'
             "-o-"       -> O'
@@ -72,7 +128,7 @@ vendor = cssToken $ \x -> case x of
             '_' : as    -> VendorUnder $ init as
             '-' : as    -> VendorMinus $ init as
             as          -> error $ msg as
-          msg as = "error while parsing, wron vendor prefix: " ++ as
+    where msg as = "error while parsing, wrong vendor prefix: " ++ as
 
 
 plainIdent :: P String
@@ -90,12 +146,15 @@ expr = flip ($) <$> (EVal <$> value) <*> cont
                 <|> pure id                              
 
 
+------------------------------------------------
+-- values
+
 value :: P Value
 value = VString     <$> string
     <|> VColor      <$> try color 
     <|> VUri        <$> try uri
     <|> VFunc       <$> try func
-    <|> VPercentage <$> try percentage
+    <|> VPercent <$> try percent
     <|> try dimensionValue
     <|> VDouble     <$> try double    
     <|> VIdent      <$> ident
@@ -116,9 +175,9 @@ color = hash' <|> rgb' <|> hsl'
                <|> try (cola "hsla" Chsla) <|> try (colaPt "hsla" ChslaPt) 
 
           col    pref con = funcIs pref *> arg3 con int
-          colPt  pref con = funcIs pref *> arg3 con percentage
+          colPt  pref con = funcIs pref *> arg3 con percent
           cola   pref con = funcIs pref *> arg4 con int
-          colaPt pref con = funcIs pref *> arg4 con percentage
+          colaPt pref con = funcIs pref *> arg4 con percent
           
           arg3 f p = f <$> (p <* comma) <*> (p <* comma) <*> (p <* closeParen)
           arg4 f p = f <$> (p <* comma) <*> (p <* comma) <*> (p <* comma)
@@ -159,9 +218,9 @@ uri = cssToken $ \x -> case x of
     T.Uri a -> Just $ S.Uri a
     _       -> Nothing
 
-percentage :: P Percentage
-percentage = cssToken $ \x -> case x of
-   T.Percentage a   -> Just $ S.Percentage a 
+percent :: P Percent
+percent = cssToken $ \x -> case x of
+   T.Percent a   -> Just $ S.Percent a 
    _                -> Nothing
 
 dimensionValue :: P Value
@@ -184,14 +243,6 @@ dimensionValue = cssToken $ \x -> case x of
             "pt"    -> VPt . Pt . round
             "ms"    -> VMs . Ms
             "s"     -> VS . S
-
-
-prio :: P () 
-prio = tok T.Important
-
-atRule :: P (Maybe VendorPrefix, AtRule)
-atRule = lol
-
 
 
 ---------------------------------------

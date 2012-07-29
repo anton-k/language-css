@@ -105,7 +105,7 @@ ruleSets = StyleSheet . map SRuleSet
 -- | set \@charset
 charset :: String -> StyleSheet -> StyleSheet
 charset str (StyleSheet body) = 
-    StyleSheet $ (SAtRule Nothing $ AtCharSet str) : body
+    StyleSheet $ (SAtRule Nothing $ AtCharset str) : body
 
 -----------------------------------------------------------------
 -- AtRules
@@ -117,8 +117,8 @@ media :: [String] -> [RuleSet] -> Rule
 media ms rs = atRule $ AtMedia (map ident ms) rs
 
 -- | \@page
-page ::  Maybe String -> Maybe PseudoPage -> [Decl] -> Rule
-page i p ds = atRule $ AtPage (ident <$> i) p ds
+page ::  Maybe PseudoPage -> [Decl] -> Rule
+page p ds = atRule $ AtPage p ds
 
 -- | import from string
 importStr :: String -> [Ident] -> Rule
@@ -136,7 +136,7 @@ fontFace = atRule . AtFontFace
 keyframes :: Ident -> [Frame] -> Rule
 keyframes name frames = atRule $ AtKeyframes name frames
 
-at :: Pt -> [Decl] -> Frame
+at :: Percent -> [Decl] -> Frame
 at = Frame . FrameAt
 
 
@@ -413,7 +413,7 @@ rgb :: Int -> Int -> Int -> Expr
 rgb x0 x1 x2 = expr $ Crgb x0 x1 x2
 
 -- | \<color\> 
-rgbPt :: Percentage -> Percentage -> Percentage -> Expr
+rgbPt :: Percent -> Percent -> Percent -> Expr
 rgbPt x0 x1 x2 = expr $ CrgbPt x0 x1 x2
 
 -- | \<color\> 
@@ -421,7 +421,7 @@ rgba :: Int -> Int -> Int -> Double -> Expr
 rgba x0 x1 x2 a = expr $ Crgba x0 x1 x2 a
 
 -- | \<color\> 
-rgbaPt :: Percentage -> Percentage -> Percentage -> Double -> Expr
+rgbaPt :: Percent -> Percent -> Percent -> Double -> Expr
 rgbaPt x0 x1 x2 a = expr $ CrgbaPt x0 x1 x2 a
 
 -- | \<color\>
@@ -429,7 +429,7 @@ hsl :: Int -> Int -> Int -> Expr
 hsl x0 x1 x2 = expr $ Chsl x0 x1 x2
 
 -- | \<color\> 
-hslPt :: Percentage -> Percentage -> Percentage -> Expr
+hslPt :: Percent -> Percent -> Percent -> Expr
 hslPt x0 x1 x2 = expr $ ChslPt x0 x1 x2
 
 -- | \<color\>
@@ -437,7 +437,7 @@ hsla :: Int -> Int -> Int -> Double -> Expr
 hsla x0 x1 x2 a = expr $ Chsla x0 x1 x2 a
 
 -- | \<color\> 
-hslaPt :: Percentage -> Percentage -> Percentage -> Double -> Expr
+hslaPt :: Percent -> Percent -> Percent -> Double -> Expr
 hslaPt x0 x1 x2 a = expr $ ChslaPt x0 x1 x2 a
 
 
@@ -483,7 +483,7 @@ pt = expr . Pt
 
 -- | \<percentage\> 
 pct :: Double -> Expr
-pct = expr . Percentage
+pct = expr . Percent
 
 -- | \<time\> 
 ms :: Double -> Expr
@@ -580,8 +580,8 @@ instance ToExpr Pt where
 instance ToExpr Double where
     expr = expr . VDouble
 
-instance ToExpr Percentage where
-    expr = expr . VPercentage
+instance ToExpr Percent where
+    expr = expr . VPercent
 
 instance ToExpr Ms where
     expr = expr . VMs

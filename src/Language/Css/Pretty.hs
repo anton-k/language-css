@@ -41,10 +41,10 @@ instance Pretty Rule where
 
 instance Pretty AtRule where
     pretty x = case x of
-        AtCharSet str               -> ppAtCharSet str
+        AtCharset str               -> ppAtCharSet str
         AtImport head ms            -> ppAtImport head ms
         AtNamespace nspImp impHead  -> ppAtNamespace nspImp impHead
-        AtPage id pp ds             -> ppAtPage id pp ds
+        AtPage pp ds                -> ppAtPage pp ds
         AtFontFace ds               -> ppAtFontFace ds
         AtKeyframes names frames    -> ppAtKeyframes names frames
 
@@ -65,8 +65,8 @@ ppAtNamespace namespaceImp impHead =
     text "namespace" <+> ppMaybe namespaceImp <+> pretty impHead
 
 -- @page
-ppAtPage id pp ds = text "page" 
-    <+> ppMaybe id <+> ppMaybe pp 
+ppAtPage pp ds = text "page" 
+    <+> (maybe empty ((colon <>) . pretty)) pp
     <+> (braces $ punctuatePretties semi ds)
 
 -- @media
@@ -192,7 +192,7 @@ instance Pretty Value where
         VPc a -> pretty a
         VPt a -> pretty a
         VDouble a -> double a
-        VPercentage a -> pretty a
+        VPercent a -> pretty a
         VString a -> doubleQuotes $ text a
         VMs a -> pretty a
         VS a -> pretty a
@@ -233,15 +233,15 @@ instance Pretty Color where
         Cword a    -> text a 
         Crgb r g b -> col "rgb" $ fmap VInt [r, g, b]
         Crgba r g b a -> col "rgba" $ [VInt r, VInt g, VInt b, VDouble a]
-        CrgbPt r g b -> col "rgb" $ fmap VPercentage [r, g, b]
+        CrgbPt r g b -> col "rgb" $ fmap VPercent [r, g, b]
         CrgbaPt r g b a -> col "rgba" $ 
-            [VPercentage r, VPercentage g, VPercentage b, VDouble a]
+            [VPercent r, VPercent g, VPercent b, VDouble a]
         
         Chsl r g b -> col "hsl" $ fmap VInt [r, g, b]
         Chsla r g b a -> col "hsla" $ [VInt r, VInt g, VInt b, VDouble a]
-        ChslPt r g b -> col "hsl" $ fmap VPercentage [r, g, b]
+        ChslPt r g b -> col "hsl" $ fmap VPercent [r, g, b]
         ChslaPt r g b a -> col "hsla" $ 
-            [VPercentage r, VPercentage g, VPercentage b, VDouble a]
+            [VPercent r, VPercent g, VPercent b, VDouble a]
         where col :: String -> [Value] -> Doc
               col name vals = (text name <> ) $  parens $ hsep $
                         punctuate comma $ map pretty vals
@@ -277,8 +277,8 @@ instance Pretty Pc where
 instance Pretty Pt where
     pretty (Pt x) = int x <> text "pt"
 
-instance Pretty Percentage where
-    pretty (Percentage x) = double x <> text "%"
+instance Pretty Percent where
+    pretty (Percent x) = double x <> text "%"
 
 instance Pretty Ms where
     pretty (Ms x) = double x <> text "ms"

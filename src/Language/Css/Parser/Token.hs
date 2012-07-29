@@ -20,7 +20,7 @@ data Token
     | BadStringTok String
     | Hash String
     | Number Double
-    | Percentage Double
+    | Percent Double
     | Dimension Double String
     | Uri String
     | UnicodeRange String

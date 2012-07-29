@@ -91,7 +91,7 @@ token :-
     \# @name            { con $ Hash . tail }
 
     @num                { con $ Number . read }
-    @num \%             { con $ Percentage . readNum . init }
+    @num \%             { con $ Percent . readNum . init }
     @num @ident         { con $ uncurry Dimension . readDim }
 
     @string             { con $ StringTok . stripQuotes }

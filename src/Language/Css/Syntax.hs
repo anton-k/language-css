@@ -43,7 +43,7 @@ module Language.Css.Syntax (
         Mm(..),
         Pc(..),
         Pt(..),
-        Percentage(..),
+        Percent(..),
         Ms(..),
         S(..),
         Uri(..),
@@ -78,13 +78,11 @@ data Rule = SRuleSet     RuleSet
 -- AtRules
 
 data AtRule 
-        = AtCharSet String                      -- ^ \@charset
+        = AtCharset String                      -- ^ \@charset
         | AtImport ImportHead [Ident]           -- ^ \@import
-
         | AtNamespace (Maybe Ident) ImportHead  -- ^ \@namespace
         | AtMedia [Ident] [RuleSet]             -- ^ \@media
-        | AtPage (Maybe Ident) (Maybe PseudoPage) [Decl]
-                                                -- ^ \@page
+        | AtPage (Maybe PseudoPage) [Decl]      -- ^ \@page
         | AtFontFace [Decl]                     -- ^ \@font-face
         | AtKeyframes Ident [Frame]             -- ^ \@keyframes 
         deriving (Eq, Show)  
@@ -98,7 +96,7 @@ data Frame = Frame FrameTime [Decl]
                   deriving (Eq, Show)  
 
    
-data FrameTime = From | To | FrameAt Pt
+data FrameTime = From | To | FrameAt Percent
                   deriving (Eq, Show)  
 
 
@@ -212,7 +210,7 @@ data Value  = VDeg Deg
             | VPc Pc 
             | VPt Pt 
             | VDouble Double 
-            | VPercentage Percentage 
+            | VPercent Percent 
             | VString String 
             | VMs Ms 
             | VS S 
@@ -240,14 +238,14 @@ data Grad = Grad Double
 data Color = Cword String 
 
            | Crgb Int Int Int
-           | CrgbPt Percentage Percentage Percentage           
+           | CrgbPt Percent Percent Percent           
            | Crgba Int Int Int Double
-           | CrgbaPt Percentage Percentage Percentage Double
+           | CrgbaPt Percent Percent Percent Double
            
            | Chsl Int Int Int
-           | ChslPt Percentage Percentage Percentage
+           | ChslPt Percent Percent Percent
            | Chsla Int Int Int Double
-           | ChslaPt Percentage Percentage Percentage Double
+           | ChslaPt Percent Percent Percent Double
         deriving (Eq, Show)
 
 -- | \<frequency\>
@@ -291,7 +289,7 @@ data Pt = Pt Int
         deriving (Eq, Show)
 
 -- | \<percentage\>
-data Percentage = Percentage Double
+data Percent = Percent Double
         deriving (Eq, Show)
 
 -- | \<time\>
