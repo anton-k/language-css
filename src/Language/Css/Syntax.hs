@@ -19,9 +19,10 @@ module Language.Css.Syntax (
         
         -- * Selectors
         GroupSel, Sel(..), SelComb(..), SimpleSel(..), 
+        TypeSel(..), ElementSel(..),
         NamespacePrefix(..), PseudoType(..),  
         Attr(..), AttrRhs(..), AttrComb(..), AttrVal(..),
-        Element, Class, Id, PseudoVal(..),
+        Element, Class, Id, PseudoVal(..), NegationArg(..),
 
         -- * Values
         Value(..), 
@@ -122,9 +123,9 @@ data Prio = Important
 type GroupSel = [Sel]
 
 -- | Selector
-data Sel = SSel [SimpleSel]         -- ^ simple selector	 
-         | CSel SelComb Sel Sel     -- ^ combination of selectors
-            deriving (Eq, Show)
+data Sel = SSel (Maybe TypeSel) [SimpleSel] -- ^ simple selector	 
+         | CSel SelComb Sel Sel             -- ^ combination of selectors
+    deriving (Eq, Show)
 
 data SelComb 
     = Descend       -- ^ ' '
@@ -134,14 +135,18 @@ data SelComb
     deriving (Eq, Show)
 
 
+data TypeSel = TypeSel (Maybe NamespacePrefix) ElementSel
+    deriving (Eq, Show)
+
+data ElementSel = UniversalSel | ElementSel Ident
+    deriving (Eq, Show)
+
 data SimpleSel 
-    = UniversalSel (Maybe NamespacePrefix)        -- ^ universal selector
-    | TypeSel (Maybe NamespacePrefix) Element     -- ^ type selector
-    | AttributeSel Attr                           -- ^ attribute selector
+    = AttributeSel Attr                           -- ^ attribute selector
     | ClassSel Class                              -- ^ class selector
     | IdSel Id                                    -- ^ id selector
     | PseudoSel PseudoType PseudoVal              -- ^ pseudo /class/element
-    | NegationSel SimpleSel                       -- ^ negation selector
+    | NegationSel NegationArg                     -- ^ negation selector
     deriving (Eq, Show)
 
 data PseudoType = OneColon | TwoColons
@@ -182,6 +187,13 @@ type Id = String
 data PseudoVal = PIdent Ident
                | PFunc Func
                   deriving (Eq, Show)
+
+data NegationArg 
+    = NegationArg1 TypeSel
+    | NegationArg2 SimpleSel
+    deriving (Eq, Show)
+
+
 
 -------------------------------------------------------------------
 -- Values

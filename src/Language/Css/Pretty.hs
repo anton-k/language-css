@@ -25,7 +25,7 @@ curly :: Doc -> Doc
 curly a = lbrace $$ a <+> rbrace
 
 ppBody :: Pretty a => [a] -> Doc
-ppBody as = curly (nest 4 $ vcat $ punctuate semi $ map pretty as)
+ppBody as = curly (vcat $ punctuate semi $ map pretty as)
 
 -- StyleSheet
 
@@ -80,7 +80,7 @@ ppAtFontFace ds = text "font-face"
 
 -- @keyframes 
 ppAtKeyframes name frames = text "keyframes" 
-    <+> pretty name <+> ppBody frames 
+    <+> pretty name $+$ (curly $ vcat $ map pretty frames)
 
 instance Pretty Frame where 
     pretty (Frame time body) = pretty time <+> ppBody body
@@ -96,7 +96,7 @@ instance Pretty FrameTime where
 instance Pretty RuleSet where
 	pretty (RuleSet sels decls) = 
                 (vcat $ punctuate comma $ map pretty sels)
-                <+> ppBody decls
+                $+$ ppBody decls
 
 -- Declarations
 
@@ -105,7 +105,7 @@ instance Pretty Decl where
             case prio of
                 Just x  -> decl <+> pretty x
                 Nothing -> decl        
-            where decl = pretty p <+> char ':' <+> pretty v
+            where decl = pretty p <> char ':' <+> pretty v
 
 instance Pretty Prio where
     pretty = const $ text "!important"
@@ -114,7 +114,7 @@ instance Pretty Prio where
 
 instance Pretty Sel where
     pretty x = case x of
-        SSel xs         -> hcat $ map pretty xs
+        SSel a xs       -> ppMaybe a <> (hcat $ map pretty xs)
         CSel comb a b   -> pretty a <+> pretty comb <+> pretty b
 
 instance Pretty SelComb where
@@ -124,15 +124,21 @@ instance Pretty SelComb where
             Adjacent    -> char '+'
             Sibling     -> char '~'
 
+instance Pretty TypeSel where
+    pretty (TypeSel a b) = ppMaybe a <> pretty b
+
+instance Pretty ElementSel where
+    pretty x = case x of
+        UniversalSel    -> char '*'
+        ElementSel a    -> pretty a
+
 instance Pretty SimpleSel where
     pretty x = case x of 
-        UniversalSel nsp    -> ppMaybe nsp <> char '*' 
-        TypeSel nsp el      -> ppMaybe nsp <> text el
         AttributeSel attr   -> pretty attr
         ClassSel a          -> char '.' <> text a
         IdSel a             -> char '#' <> text a
         PseudoSel t val     -> pretty t <> pretty val
-        NegationSel a       -> text ":not" <> parens (pretty a)
+        NegationSel a       -> text "not" <> parens (pretty a)
 
 
 instance Pretty NamespacePrefix where
@@ -150,6 +156,11 @@ instance Pretty PseudoVal where
     pretty x = case x of 
                 PIdent a -> pretty a
                 PFunc  a -> pretty a
+
+instance Pretty NegationArg where
+    pretty x = case x of 
+        NegationArg1 a  -> pretty a
+        NegationArg2 a  -> pretty a
 
 instance Pretty Attr where
     pretty (Attr nsp name rhs) = brackets $ 

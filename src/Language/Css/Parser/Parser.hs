@@ -1,4 +1,8 @@
 -- todo AtCharSet -> AtCharset
+
+-- parsec tuts
+-- http://www.haskell.org/haskellwiki/Parsing_a_simple_imperative_language
+-- http://www.haskell.org/haskellwiki/Parsing_expressions_and_statements
 module Parser where
 
 import Control.Applicative
@@ -12,6 +16,7 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos
 
 import Language.Css.Syntax
+import Language.Css.Pretty(Pretty(..))
 import qualified Language.Css.Syntax as S
 
 import Token
@@ -20,6 +25,9 @@ import qualified Token as T
 type P = GenParser (L Token) ()
 
 lol = undefined
+
+parser :: P a -> [L Token] -> Either ParseError a
+parser p = runParser p () ""
 
 -----------------------------------------------------
 -- top level
@@ -46,6 +54,8 @@ atRule = join $ cssToken $ \x -> case x of
             "page"      -> page
             "font-face" -> fontFace
             "keyframes" -> keyframes
+            as          -> error $ msg as
+          msg as = "parsing wrong at-rule: @" ++ as
 
 charset, import', namespace, media, 
     page, fontFace, keyframes :: P AtRule
@@ -84,8 +94,78 @@ prio :: P ()
 prio = tok T.Important
 
 groupSel :: P GroupSel
-groupSel = lol
+groupSel = sel `sepBy1` comma
 
+sel :: P Sel
+sel = flip ($) <$> ssel <*> cont
+    where ssel = SSel <$> (Just <$> typeSel) <*> many simpleSel 
+             <|> SSel Nothing <$> many1 simpleSel
+          op f p = flip (CSel f) <$> (p *> sel)   
+          cont = op Adjacent    plus
+             <|> op S.Child     greater
+             <|> op Sibling     tilde
+             <|> try (flip (CSel Descend) <$> sel)     -- space separates
+             <|> pure id
+
+typeSel :: P TypeSel
+typeSel = try (conNamespace <$> namespacePrefix <*> elementSel)
+      <|> conNoNamespace <$> elementSel
+    where conNamespace   = TypeSel . Just
+          conNoNamespace = TypeSel Nothing
+    
+
+namespacePrefix :: P NamespacePrefix
+namespacePrefix = BlankNamespace <$ bar
+    <|> AnyNamespace <$ (star *> bar)
+    <|> JustNamespace <$> (ident <* bar)
+
+elementSel :: P ElementSel
+elementSel = UniversalSel <$ star 
+        <|>  ElementSel <$> ident
+
+simpleSel :: P SimpleSel
+simpleSel = idSel
+    <|> classSel
+    <|> attributeSel
+    <|> pseudoSel
+    <|> negationSel 
+
+idSel       = IdSel <$> hash 
+
+classSel    = ClassSel . joinName <$> (period *> ident)
+    where joinName (S.Ident a b) = maybe id ((++) . printPrefix) a b        
+          printPrefix = show . pretty  
+
+attributeSel = AttributeSel <$> brackets 
+    (try attrNamespace <|> attrNoNamespace)
+    where attrNamespace = Attr <$> (Just <$> namespacePrefix) <*> ident 
+                      <*> optionMaybe attrRhs
+          attrNoNamespace = Attr Nothing <$> ident <*> optionMaybe attrRhs
+          attrRhs = AttrRhs <$> attrComb <*> attrVal
+          attrComb = prefixMatch <|> suffixMatch <|> substringMatch 
+                 <|> equalsMatch <|> includes <|> dashMatch
+          attrVal = AttrValIdent  <$> ident
+                <|> AttrValString <$> string
+
+prefixMatch     = S.PrefixMatch     <$ tok T.PrefixMatch
+suffixMatch     = S.SuffixMatch     <$ tok T.SuffixMatch
+dashMatch       = S.DashMatch       <$ tok T.DashMatch 
+substringMatch  = S.SubstringMatch	<$ tok T.SubstringMatch	
+equalsMatch	    = S.EqualsMatch	    <$ tok T.EqualsMatch	
+includes        = S.Includes        <$ tok T.Includes
+
+
+pseudoSel = colon *> (PseudoSel <$> pseudoType <*> pseudoVal)
+
+pseudoType = option OneColon (TwoColons <$ colon)
+pseudoVal = PFunc  <$> func 
+        <|> PIdent <$> ident
+
+negationSel = NegationSel <$> (funcIs "not" *> negationArg <* closeParen)
+
+negationArg = NegationArg1 <$> typeSel
+          <|> NegationArg2 <$> simpleSel
+          
 decls :: P [Decl]
 decls = braces $ decl `sepEndBy` semiColon
 
@@ -128,7 +208,7 @@ parseVendor x = case map toLower x of
             '_' : as    -> VendorUnder $ init as
             '-' : as    -> VendorMinus $ init as
             as          -> error $ msg as
-    where msg as = "error while parsing, wrong vendor prefix: " ++ as
+    where msg as = "parsing wrong vendor prefix: " ++ as
 
 
 plainIdent :: P String
@@ -142,7 +222,7 @@ expr = flip ($) <$> (EVal <$> value) <*> cont
     where op f p = flip f <$> (p *> expr)
           cont =    op CommaSep comma  
                 <|> op SlashSep slash
-                <|> try (op SpaceSep empty) 
+                <|> try (flip SpaceSep <$> expr) 
                 <|> pure id                              
 
 
@@ -183,9 +263,10 @@ color = hash' <|> rgb' <|> hsl'
           arg4 f p = f <$> (p <* comma) <*> (p <* comma) <*> (p <* comma)
                         <*> (double <* closeParen)        
 
-          funcIs a = cssToken $ \x -> case x of
-            Function str    -> if (str == a) then Just () else Nothing
-            _               -> Nothing
+funcIs :: String -> P ()
+funcIs a = cssToken $ \x -> case x of
+    Function str    -> if (map toLower str == a) then Just () else Nothing
+    _               -> Nothing
 
 hash :: P String
 hash = cssToken $ \x -> case x of
@@ -278,5 +359,8 @@ colon     = tok Colon
 semiColon = tok SemiColon
 period    = tok Period
 slash     = tok Slash
-
-
+tilde     = tok Tilde
+greater   = tok Greater  
+plus      = tok Plus
+star      = tok Mult  
+bar       = tok Bar

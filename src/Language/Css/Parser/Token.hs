@@ -30,6 +30,8 @@ data Token
     | Slash
     | Period
     | Bang
+    | Greater
+    | Bar
     | OpenParen
     | CloseParen
     | OpenCurly

@@ -156,10 +156,16 @@ type Sel' = [Decl] -> RuleSet
 
 -- | @*@ selector
 star :: Sel'
-star = RuleSet $ return $ SSel [UniversalSel Nothing]
+star = RuleSet $ return $ SSel (Just (TypeSel Nothing UniversalSel)) []
 
 instance Idents Sel' where
-    ident x = RuleSet $ return $ SSel [TypeSel Nothing x]
+    ident x = RuleSet $ return $ SSel (Just $ ident x) []
+
+instance Idents ElementSel where
+    ident = ElementSel . ident
+
+instance Idents TypeSel where
+    ident = TypeSel Nothing . ident
 
 -- compose
 
@@ -264,8 +270,8 @@ instance Idents AttrVal where
 
 
 appendSubSel :: SimpleSel -> Sel -> Sel
-appendSubSel s a = case a of
-    SSel xs     -> SSel $ xs ++ [s]     
+appendSubSel s x = case x of
+    SSel a xs   -> SSel a $ xs ++ [s]     
     CSel op a b -> CSel op (appendSubSel s a) (appendSubSel s b)
         
 
@@ -299,21 +305,15 @@ justNamespace = setNamespacePrefix . JustNamespace . ident
 instance SetNamespacePrefix Sel' where
     setNamespacePrefix prefix = liftSel1 (setNamespacePrefix prefix)
 
-instance SetNamespacePrefix SimpleSel where
-    setNamespacePrefix prefix x = case x of
-        UniversalSel _      -> UniversalSel (Just prefix)
-        TypeSel _ elem      -> TypeSel (Just prefix) elem
-        _                   -> x
-
 instance SetNamespacePrefix Sel where
     setNamespacePrefix prefix x = case x of
-        SSel as     -> SSel $ case as of
-                        []      -> []
-                        a:rest  -> phi a : rest
+        SSel x as   -> SSel (fmap phi x) as
         CSel op a b -> CSel op (phi a) (phi b) 
         where phi :: SetNamespacePrefix a => a -> a
-              phi = setNamespacePrefix prefix  
+              phi = setNamespacePrefix prefix            
 
+instance SetNamespacePrefix TypeSel where
+    setNamespacePrefix prefix (TypeSel _ a) = TypeSel (Just prefix) a
 
 instance SetNamespacePrefix Attr where
     setNamespacePrefix prefix a = a{ attrNamespace = Just prefix }

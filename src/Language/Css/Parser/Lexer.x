@@ -76,9 +76,9 @@ $l'         = [lL]
 token :-
 
     $white+             ;
-    @comment            { con Comment }
-    @badComment         { con BadComment }
-    @badString          { con BadStringTok }
+    @comment            ; -- { con Comment }
+    @badComment         ; -- { con BadComment }
+    @badString          ; -- { con BadStringTok }
 
     @vendor             { con VendorPrefix }     
     @ident              { con Ident }
@@ -111,6 +111,8 @@ token :-
     \/                  { tok Slash }
     \.                  { tok Period }
     !                   { tok Bang }
+    \|                  { tok Bar }
+    >                   { tok Greater }
 
     @ident \(           { con $ Function . init }
 
