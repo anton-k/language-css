@@ -33,19 +33,20 @@ parser p = runParser p () ""
 -- top level
 
 styleSheet :: P StyleSheet
-styleSheet = StyleSheet <$> many rule
+styleSheet = sl $ StyleSheet <$> many rule
 
 rule :: P Rule
-rule =  atRule 
+rule =  sr $ 
+        atRule 
     <|> SRuleSet <$> ruleSet 
 
 ------------------------------------------------------
 -- at rules
 
 atRule :: P Rule
-atRule = join $ cssToken $ \x -> case x of
-    T.AtRule vp name    -> Just $ SAtRule (parseVendor <$> vp) <$> parse name
-    _                   -> Nothing
+atRule = join $ fmap sr $ cssToken $ \x -> case x of
+    T.AtRule vp name -> Just $ SAtRule (parseVendor <$> vp) <$> parse name
+    _                -> Nothing
     where parse x = case map toLower x of
             "charset"   -> charset
             "import"    -> import'
@@ -60,52 +61,54 @@ atRule = join $ cssToken $ \x -> case x of
 charset, import', namespace, media, 
     page, fontFace, keyframes :: P AtRule
 
-charset = AtCharset <$> string <* semiColon           
+charset = sr $ AtCharset <$> string <* semiColon           
 
-import' = AtImport <$> importHead <*> medias 
+import' = sr $ AtImport <$> importHead <*> medias 
     where medias = (ident `sepBy` comma) <* semiColon 
     
-importHead =  IStr <$> string <|> IUri <$> uri
+importHead = sr $ IStr <$> string <|> IUri <$> uri
 
-namespace = AtNamespace <$> optionMaybe ident <*> importHead <* semiColon
+namespace = sr $ AtNamespace <$> optionMaybe ident <*> importHead <* semiColon
 
-media = AtMedia <$> mediums <*> rules
+media = sr $ AtMedia <$> mediums <*> rules
     where mediums = (ident `sepBy1` comma)
           rules = braces $ many ruleSet   
 
-page = AtPage <$> optionMaybe (colon *> ident) <*> decls 
+page = sr $ AtPage <$> optionMaybe (colon *> ident) <*> decls 
 
-fontFace = AtFontFace <$> decls
+fontFace = sr $ AtFontFace <$> decls
 
-keyframes = AtKeyframes <$> ident <*> frames
+keyframes = sr $ AtKeyframes <$> ident <*> frames
     where frames = braces $ many frame
-          frame  = Frame <$> time <*> decls
-          time   = from <|> to <|> FrameAt <$> percent  
-                where from = From <$ identIs "from"
-                      to   = To   <$ identIs "to"  
+          frame  = sr $ Frame <$> time <*> decls
+          time   = sr $ from <|> to <|> FrameAt <$> percent  
+                where from = sr $ From <$ identIs "from"
+                      to   = sr $ To   <$ identIs "to"  
 
 ------------------------------------------------------
 -- rules
 
 ruleSet :: P RuleSet
-ruleSet = RuleSet <$> groupSel <*> decls
+ruleSet = sr $ RuleSet <$> groupSel <*> decls
 
 prio :: P () 
-prio = tok T.Important
+prio = sr $ tok T.Important
 
 groupSel :: P GroupSel
-groupSel = sel `sepBy1` comma
+groupSel = sr $ sel `sepBy1` comma
 
 sel :: P Sel
 sel = flip ($) <$> ssel <*> cont
-    where ssel = SSel <$> (Just <$> typeSel) <*> many simpleSel 
-             <|> SSel Nothing <$> many1 simpleSel
-          op f p = flip (CSel f) <$> (p *> sel)   
-          cont = op Adjacent    plus
+    where op f p = try $ flip (CSel f) <$> (p *> sel)   
+          cont = op Descend     s1       -- space separates
+             <|> op Adjacent    plus
              <|> op S.Child     greater
              <|> op Sibling     tilde
-             <|> try (flip (CSel Descend) <$> sel)     -- space separates
              <|> pure id
+    
+ssel :: P Sel
+ssel = sl $ SSel <$> (Just <$> typeSel) <*> many simpleSel 
+             <|> SSel Nothing <$> many1 simpleSel
 
 typeSel :: P TypeSel
 typeSel = try (conNamespace <$> namespacePrefix <*> elementSel)
@@ -115,7 +118,8 @@ typeSel = try (conNamespace <$> namespacePrefix <*> elementSel)
     
 
 namespacePrefix :: P NamespacePrefix
-namespacePrefix = BlankNamespace <$ bar
+namespacePrefix = sr $ 
+        BlankNamespace <$ bar
     <|> AnyNamespace <$ (star *> bar)
     <|> JustNamespace <$> (ident <* bar)
 
@@ -124,7 +128,8 @@ elementSel = UniversalSel <$ star
         <|>  ElementSel <$> ident
 
 simpleSel :: P SimpleSel
-simpleSel = idSel
+simpleSel =  
+        idSel
     <|> classSel
     <|> attributeSel
     <|> pseudoSel
@@ -141,45 +146,50 @@ attributeSel = AttributeSel <$> brackets
     where attrNamespace = Attr <$> (Just <$> namespacePrefix) <*> ident 
                       <*> optionMaybe attrRhs
           attrNoNamespace = Attr Nothing <$> ident <*> optionMaybe attrRhs
-          attrRhs = AttrRhs <$> attrComb <*> attrVal
-          attrComb = prefixMatch <|> suffixMatch <|> substringMatch 
+          attrRhs = sr $ AttrRhs <$> attrComb <*> attrVal
+          attrComb = sr $
+                     prefixMatch <|> suffixMatch <|> substringMatch 
                  <|> equalsMatch <|> includes <|> dashMatch
-          attrVal = AttrValIdent  <$> ident
+          attrVal = sr $
+                    AttrValIdent  <$> ident
                 <|> AttrValString <$> string
 
-prefixMatch     = S.PrefixMatch     <$ tok T.PrefixMatch
-suffixMatch     = S.SuffixMatch     <$ tok T.SuffixMatch
-dashMatch       = S.DashMatch       <$ tok T.DashMatch 
-substringMatch  = S.SubstringMatch	<$ tok T.SubstringMatch	
-equalsMatch	    = S.EqualsMatch	    <$ tok T.EqualsMatch	
-includes        = S.Includes        <$ tok T.Includes
+prefixMatch     = sr $ S.PrefixMatch     <$ tok T.PrefixMatch
+suffixMatch     = sr $ S.SuffixMatch     <$ tok T.SuffixMatch
+dashMatch       = sr $ S.DashMatch       <$ tok T.DashMatch 
+substringMatch  = sr $ S.SubstringMatch	<$ tok T.SubstringMatch	
+equalsMatch	    = sr $ S.EqualsMatch	    <$ tok T.EqualsMatch	
+includes        = sr $ S.Includes        <$ tok T.Includes
 
 
 pseudoSel = colon *> (PseudoSel <$> pseudoType <*> pseudoVal)
 
-pseudoType = option OneColon (TwoColons <$ colon)
+pseudoType = sr $ option OneColon (TwoColons <$ colon)
 pseudoVal = PFunc  <$> func 
         <|> PIdent <$> ident
 
-negationSel = NegationSel <$> (funcIs "not" *> negationArg <* closeParen)
+negationSel = 
+    NegationSel <$> (funcIs "not" *> negationArg <* closeParen)
 
-negationArg = NegationArg1 <$> typeSel
-          <|> NegationArg2 <$> simpleSel
+negationArg = sr $ 
+        NegationArg1 <$> typeSel
+    <|> NegationArg2 <$> simpleSel
           
 decls :: P [Decl]
-decls = braces $ decl `sepEndBy` semiColon
+decls = sr $ braces $ decl `sepEndBy` semiColon
 
 decl :: P Decl
-decl =  try (onPrio <$> stmt <* prio)
+decl = sr $ 
+        try (onPrio <$> stmt <* prio)
     <|> stmt
     where onPrio (Decl _ a b) = Decl (Just S.Important) a b
-          stmt = Decl Nothing <$> (ident <* colon) <*> expr  
+          stmt = sr $ Decl Nothing <$> (ident <* colon) <*> expr  
 
 ident :: P Ident
 ident = S.Ident <$> optionMaybe vendor <*> plainIdent
 
 identIs :: String -> P ()
-identIs a = cssToken $ \x -> case x of
+identIs a = sr $ cssToken $ \x -> case x of
     T.Ident b   -> if a == b then Just () else Nothing
     _           -> Nothing
 
@@ -218,8 +228,8 @@ plainIdent = cssToken $ \x -> case x of
 
 
 expr :: P Expr 
-expr = flip ($) <$> (EVal <$> value) <*> cont        
-    where op f p = flip f <$> (p *> expr)
+expr = sr $ flip ($) <$> (EVal <$> value) <*> cont        
+    where op f p = sr $ flip f <$> (p *> expr)
           cont =    op CommaSep comma  
                 <|> op SlashSep slash
                 <|> try (flip SpaceSep <$> expr) 
@@ -230,7 +240,8 @@ expr = flip ($) <$> (EVal <$> value) <*> cont
 -- values
 
 value :: P Value
-value = VString     <$> string
+value = sr $ 
+        VString     <$> string
     <|> VColor      <$> try color 
     <|> VUri        <$> try uri
     <|> VFunc       <$> try func
@@ -241,12 +252,12 @@ value = VString     <$> string
 
 
 string :: P String
-string = cssToken $ \x -> case x of
+string = sr $ cssToken $ \x -> case x of
     StringTok str   -> Just str
     _               -> Nothing
 
 color :: P Color
-color = hash' <|> rgb' <|> hsl'
+color = sr $ hash' <|> rgb' <|> hsl'
     where hash' = Cword . ('#':) <$> hash 
           rgb'  =  try (col  "rgb"  Crgb)  <|> try (colPt  "rgb"  CrgbPt)
                <|> try (cola "rgba" Crgba) <|> try (colaPt "rgba" CrgbaPt)
@@ -254,17 +265,19 @@ color = hash' <|> rgb' <|> hsl'
           hsl'  =  try (col  "hsl"  Chsl)  <|> try (colPt  "hsl"  ChslPt)
                <|> try (cola "hsla" Chsla) <|> try (colaPt "hsla" ChslaPt) 
 
-          col    pref con = funcIs pref *> arg3 con int
-          colPt  pref con = funcIs pref *> arg3 con percent
-          cola   pref con = funcIs pref *> arg4 con int
-          colaPt pref con = funcIs pref *> arg4 con percent
+          col    pref con = sr $ funcIs pref *> arg3 con int
+          colPt  pref con = sr $ funcIs pref *> arg3 con percent
+          cola   pref con = sr $ funcIs pref *> arg4 con int
+          colaPt pref con = sr $ funcIs pref *> arg4 con percent
           
-          arg3 f p = f <$> (p <* comma) <*> (p <* comma) <*> (p <* closeParen)
-          arg4 f p = f <$> (p <* comma) <*> (p <* comma) <*> (p <* comma)
-                        <*> (double <* closeParen)        
+          arg3 f p = sr $
+                     f <$> (p <* comma) <*> (p <* comma) <*> (p <* closeParen)
+          arg4 f p = sr $
+                     f <$> (p <* comma) <*> (p <* comma) <*> (p <* comma)
+                       <*> (double <* closeParen)        
 
 funcIs :: String -> P ()
-funcIs a = cssToken $ \x -> case x of
+funcIs a = sr $ cssToken $ \x -> case x of
     Function str    -> if (map toLower str == a) then Just () else Nothing
     _               -> Nothing
 
@@ -274,38 +287,39 @@ hash = cssToken $ \x -> case x of
     _       -> Nothing
 
 func :: P Func
-func =  try (func3 <$> vendor <*> funcName <*> args)
-    <|>     (func2 <$>            funcName <*> args) 
+func = sr $
+        try (func3 <$> vendor <*> funcName <*> args)
+    <|> (func2 <$>            funcName <*> args) 
     where func3 vp name = Func (S.Ident (Just vp) name) 
           func2    name = Func (S.Ident Nothing   name)              
           args = (expr `sepBy1` comma) <* closeParen
 
 
 funcName :: P String
-funcName = cssToken $ \x -> case x of
+funcName = sr $ cssToken $ \x -> case x of
     Function str    -> Just str
     _               -> Nothing
 
 double :: P Double
-double = cssToken $ \x -> case x of
+double = sr $ cssToken $ \x -> case x of
    Number a     -> Just a
    _            -> Nothing
 
 int :: P Int
-int = round <$> double
+int = sr $ round <$> double
 
 uri :: P Uri
-uri = cssToken $ \x -> case x of
+uri = sr $ cssToken $ \x -> case x of
     T.Uri a -> Just $ S.Uri a
     _       -> Nothing
 
 percent :: P Percent
-percent = cssToken $ \x -> case x of
+percent = sr $ cssToken $ \x -> case x of
    T.Percent a   -> Just $ S.Percent a 
    _                -> Nothing
 
 dimensionValue :: P Value
-dimensionValue = cssToken $ \x -> case x of
+dimensionValue = sr $ cssToken $ \x -> case x of
     Dimension a m   -> Just $ parse m a
     _               -> Nothing
     where parse x = case map toLower x of
@@ -346,21 +360,40 @@ pos2sourcePos (l,c) = newPos "" l c
 
 
 parens, braces, brackets :: P a -> P a
-parens   = between (tok OpenParen)  (tok CloseParen)
-braces   = between (tok OpenCurly)  (tok CloseCurly)
-brackets = between (tok OpenSquare) (tok CloseSquare)
+parens   = between (sr $ tok OpenParen)  (tok CloseParen)
+braces   = between (sr $ tok OpenCurly)  (tok CloseCurly)
+brackets = between (sr $ tok OpenSquare) (tok CloseSquare)
 
 closeParen :: P ()
 closeParen = tok CloseParen
 
+s, s1 :: P [()]
+
+s  = many  space'
+s1 = many1 space'
+
+sl, sr, sb :: P a -> P a
+
+sl = (s *>)
+sr = ( <* s)
+
+sb = sl . sr
+
+space' :: P ()
+space' = tok Space
+
+
+
 comma, colon, semiColon, period :: P ()
-comma     = tok Comma
-colon     = tok Colon
-semiColon = tok SemiColon
-period    = tok Period
-slash     = tok Slash
-tilde     = tok Tilde
-greater   = tok Greater  
-plus      = tok Plus
-star      = tok Mult  
-bar       = tok Bar
+
+comma     = sr $ tok Comma
+colon     = sr $ tok Colon
+semiColon = sr $ tok SemiColon
+period    = sr $ tok Period
+slash     = sr $ tok Slash
+tilde     = sb $ tok Tilde
+greater   = sb $ tok Greater  
+plus      = sb $ tok Plus
+star      = sr $ tok Mult  
+bar       = sr $ tok Bar
+

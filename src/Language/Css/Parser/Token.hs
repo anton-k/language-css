@@ -7,7 +7,8 @@ data L a = L Pos a
 type Pos = (Int, Int)
 
 data Token 
-    = Ident String
+    = Space
+    | Ident String
     | VendorPrefix String
     | Comment String
     | BadComment String

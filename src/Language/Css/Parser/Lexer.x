@@ -75,7 +75,7 @@ $l'         = [lL]
 
 token :-
 
-    $white+             ;
+    $white+             { tok Space }
     @comment            ; -- { con Comment }
     @badComment         ; -- { con BadComment }
     @badString          ; -- { con BadStringTok }
