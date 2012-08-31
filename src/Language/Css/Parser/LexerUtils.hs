@@ -1,8 +1,10 @@
 module LexerUtils(
     readNum, stripQuotes, stripUri, stripAtRule) where
 
+import Debug.Trace
+
 readNum :: String -> Double
-readNum x = read $ case x of
+readNum x = read $ trace (show x) $ case x of
     '.' : as        -> zero as
     '-' : '.' : as  -> '-' : zero as
     '+' : '.' : as  -> zero as

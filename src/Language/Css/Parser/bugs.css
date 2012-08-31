@@ -1,0 +1,10 @@
+a {
+  *zoom: 1;
+  _zoom: 1;
+  -zoom: 1;
+ width:100% \9;
+  filter:alpha(opacity=0);
+  top:expression(0+((e=document.documentElement.scrollTop)?e:document.body.scrollTop)+'px');
+ filter:progid:DXImageTransform.Microsoft.Alpha(Opacity=40)
+}
+

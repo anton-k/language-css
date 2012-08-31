@@ -21,11 +21,11 @@ punctuatePretties sep = hcat . punctuate sep . map pretty
 
 vsep = vcat . punctuate (text "\n")
 
-curly :: Doc -> Doc
-curly a = lbrace $$ a <+> rbrace
+curly :: Doc -> Doc -> Doc
+curly head body = (head <+> lbrace) $+$ nest 4 body $$ rbrace
 
 ppBody :: Pretty a => [a] -> Doc
-ppBody as = curly (vcat $ punctuate semi $ map pretty as)
+ppBody as = vcat $ punctuate semi $ map pretty as
 
 -- StyleSheet
 
@@ -47,6 +47,7 @@ instance Pretty AtRule where
         AtPage pp ds                -> ppAtPage pp ds
         AtFontFace ds               -> ppAtFontFace ds
         AtKeyframes names frames    -> ppAtKeyframes names frames
+        AtMedia is ds               -> ppAtMedia is ds
 
 -- @charset
 ppAtCharSet str = text "charset " <> text str <+> semi
@@ -79,11 +80,12 @@ ppAtFontFace ds = text "font-face"
     <+> (braces $ punctuatePretties semi ds)
 
 -- @keyframes 
-ppAtKeyframes name frames = text "keyframes" 
-    <+> pretty name $+$ (curly $ vcat $ map pretty frames)
+ppAtKeyframes name frames = 
+    curly (text "keyframes" <+> pretty name)
+          (vcat $ map pretty frames)
 
 instance Pretty Frame where 
-    pretty (Frame time body) = pretty time <+> ppBody body
+    pretty (Frame time body) = curly (pretty time) (ppBody body)
 
 instance Pretty FrameTime where
     pretty x = case x of
@@ -94,9 +96,9 @@ instance Pretty FrameTime where
 -- RuleSets
 
 instance Pretty RuleSet where
-	pretty (RuleSet sels decls) = 
-                (vcat $ punctuate comma $ map pretty sels)
-                $+$ ppBody decls
+	pretty (RuleSet sels decls) = curly
+            (hsep $ punctuate comma $ map pretty sels)
+            (ppBody decls)
 
 -- Declarations
 
@@ -115,7 +117,7 @@ instance Pretty Prio where
 instance Pretty Sel where
     pretty x = case x of
         SSel a xs       -> ppMaybe a <> (hcat $ map pretty xs)
-        CSel comb a b   -> pretty a <+> pretty comb <+> pretty b
+        CSel comb a b   -> pretty a <> pretty comb <> pretty b
 
 instance Pretty SelComb where
     pretty x = case x of
@@ -215,9 +217,9 @@ instance Pretty Value where
 instance Pretty Expr where
     pretty x = case x of
                 EVal x -> pretty x
-                SlashSep x e -> pretty x <+> char '/' <+> pretty e
-                CommaSep x e -> pretty x <+> char ',' <+> pretty e
-                SpaceSep x e -> pretty x <+> space <+> pretty e
+                SlashSep x e -> pretty x <> char '/' <> pretty e
+                CommaSep x e -> pretty x <> char ',' <+> pretty e
+                SpaceSep x e -> pretty x <> space <> pretty e
 
 instance Pretty Func where
     pretty (Func name args) = pretty name 

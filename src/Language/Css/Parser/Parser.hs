@@ -61,24 +61,24 @@ atRule = join $ fmap sr $ cssToken $ \x -> case x of
 charset, import', namespace, media, 
     page, fontFace, keyframes :: P AtRule
 
-charset = sr $ AtCharset <$> string <* semiColon           
+charset = sb $ AtCharset <$> string <* semiColon           
 
-import' = sr $ AtImport <$> importHead <*> medias 
+import' = sb $ AtImport <$> importHead <*> medias 
     where medias = (ident `sepBy` comma) <* semiColon 
     
-importHead = sr $ IStr <$> string <|> IUri <$> uri
+importHead = sb $ IStr <$> string <|> IUri <$> uri
 
-namespace = sr $ AtNamespace <$> optionMaybe ident <*> importHead <* semiColon
+namespace = sb $ AtNamespace <$> optionMaybe ident <*> importHead <* semiColon
 
-media = sr $ AtMedia <$> mediums <*> rules
+media = sb $ AtMedia <$> mediums <*> rules
     where mediums = (ident `sepBy1` comma)
           rules = braces $ many ruleSet   
 
-page = sr $ AtPage <$> optionMaybe (colon *> ident) <*> decls 
+page = sb $ AtPage <$> optionMaybe (colon *> ident) <*> decls 
 
-fontFace = sr $ AtFontFace <$> decls
+fontFace = sb $ AtFontFace <$> decls
 
-keyframes = sr $ AtKeyframes <$> ident <*> frames
+keyframes = sb $ AtKeyframes <$> ident <*> frames
     where frames = braces $ many frame
           frame  = sr $ Frame <$> time <*> decls
           time   = sr $ from <|> to <|> FrameAt <$> percent  
@@ -91,8 +91,8 @@ keyframes = sr $ AtKeyframes <$> ident <*> frames
 ruleSet :: P RuleSet
 ruleSet = sr $ RuleSet <$> groupSel <*> decls
 
-prio :: P () 
-prio = sr $ tok T.Important
+prio :: P Prio 
+prio = sr $ S.Important <$ tok T.Important
 
 groupSel :: P GroupSel
 groupSel = sr $ sel `sepBy1` comma
@@ -179,11 +179,9 @@ decls :: P [Decl]
 decls = sr $ braces $ decl `sepEndBy` semiColon
 
 decl :: P Decl
-decl = sr $ 
-        try (onPrio <$> stmt <* prio)
-    <|> stmt
-    where onPrio (Decl _ a b) = Decl (Just S.Important) a b
-          stmt = sr $ Decl Nothing <$> (ident <* colon) <*> expr  
+decl = sr $ comb <$> (ident <* sl colon) <*> expr <*> optionMaybe prio
+    where comb a b c = Decl c a b
+
 
 ident :: P Ident
 ident = S.Ident <$> optionMaybe vendor <*> plainIdent
@@ -338,7 +336,8 @@ dimensionValue = sr $ cssToken $ \x -> case x of
             "pt"    -> VPt . Pt . round
             "ms"    -> VMs . Ms
             "s"     -> VS . S
-
+            as      -> error $ msg as
+          msg as = "parsing wrong dimension specifier: " ++ as
 
 ---------------------------------------
 --

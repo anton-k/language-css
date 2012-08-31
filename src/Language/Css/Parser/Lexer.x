@@ -71,26 +71,38 @@ $l'         = [lL]
 
 @urlName    = $u' $r' $l'
 
+-- case insencitive name for 'mso-'
+$m'         = [mM]
+$s'         = [sS]
+$o'         = [oO]
+
+@msoName    = $m' $s' $o' \-
+
 @w          = $white*
+
+@prio       = "!" ($white | @comment)* "important"
 
 token :-
 
-    $white+             { tok Space }
+    $white+             { tok Space }           -- we need to keep white space due to 
+                                                -- syntax rules for selectors
     @comment            ; -- { con Comment }
     @badComment         ; -- { con BadComment }
     @badString          ; -- { con BadStringTok }
 
     @vendor             { con VendorPrefix }     
+    @msoName            { tok (VendorPrefix "mso-") }
     @ident              { con Ident }
 
-    "!important"        { tok Important }
+    @prio               { tok Important }
 
     "@" @vendor @ident  { con $ (\(a, b) -> AtRule (Just a) b) . stripAtRule . tail } 
+    "@" @msoName @ident { con $ AtRule (Just "mso-") . drop 5 }      -- drop "@mso-"
     "@" @ident          { con $ AtRule Nothing . tail }
 
     \# @name            { con $ Hash . tail }
 
-    @num                { con $ Number . read }
+    @num                { con $ Number . readNum }
     @num \%             { con $ Percent . readNum . init }
     @num @ident         { con $ uncurry Dimension . readDim }
 
